@@ -1,0 +1,60 @@
+---
+title: "Mitral valve analysis"
+author: "Steve Simon"
+date: "May 23, 2017"
+output: html_document
+---
+
+MITRAL
+ 
+1.	Arithmetic data for columns where possible – mean, median, SD, range
+2.	What is the long-term survival in children who have had prosthetic MVR?
+3.	Relationship of survival to
+Age at 1st MVR (P-B)
+Weight at 1st MVR (Q)
+Valve type at 1st MVR (N, but also S)
+Valve size at 1st MVR (R)
+Underlying disease (M)
+Underlying hemodynamic mechanism – MR versus MS versus both (O)
+Perfusion time (T)
+Concomitant prosthetic AVR (V)
+Initial Hospital length of stay (U-P)
+Era effect - < 1990 versus 1990s and up to 2003 (P)
+Geography – State (F)
+Institution (not important)
+4.	Causes of death – big piles only (Tab 3, D and E)
+5.	Early deaths (PCCC) versus late deaths (NDI) – compare profiles (H versus BI)
+6.	Interactions (think about it)
+7.	Confounders – collinearity
+8.	Need competing risk plot – I need to think about what goes in this once we see some results
+9.	Redo stuff – we may not have time for this before abstract deadline
+ 
+AORTIC
+ 
+1.	Arithmetic data for columns where possible – mean, median, SD, range
+2.	What is the long-term survival of children with AVR?
+3.	Head to head comparison of Ross versus Bio prosthesis versus Mechanical prosthesis looking at survival within the 3 groups and relation to following
+ 
+Age at 1st AVR
+Weight at 1st AVR
+Valve type at 1st AVR
+Valve size at 1st AVR
+Underlying disease
+Underlying hemodynamic mechanism – AR versus AS versus both
+Perfusion time
+Concomitant prosthetic MVR
+Initial Hospital length of stay
+Era effect - < 1990 versus 1990s and up to 2003
+Geography – State 
+Institution
+4.	Causes of death – Big piles only
+5.	Early deaths (PCCC) versus late deaths (NDI) – compare profiles
+6.	Interactions
+7.	Confounders – collinearity
+8.	Kaplan Meir – Ross versus Bio versus Mechanical AVR
+9.	Competing risk – will think thru this some more
+10.	Redo stuff – we may not have time for this before abstract deadline
+ 
+```{r read-data}
+mv1 <- read.csv("mitral1.csv")
+```
