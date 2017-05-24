@@ -1,0 +1,211 @@
+---
+title: "Mitral valve analysis"
+author: "Steve Simon"
+date: "May 23, 2017"
+output: html_document
+---
+
+```{r preliminaries, echo=FALSE}
+library(dplyr)
+library(lubridate)
+library(magrittr)
+```
+
+```{r read-data}
+mv1 <- read.csv("mitral1.csv", as.is=TRUE)
+mv3 <- read.csv("mitral3.csv", as.is=TRUE)
+names(mv1) %<>% tolower
+names(mv3) %<>% tolower
+names(mv1) %<>% gsub("\\.",   "_", .)
+names(mv3) %<>% gsub("\\.",   "_", .)
+names(mv1) %<>% gsub("_+",    "_", .)
+names(mv3) %<>% gsub("_+",    "_", .)
+i1 <- which(names(mv1)=="x")
+i2 <- dim(mv1)[2]
+for (i in i1:i2) {
+  print(table(mv1[, i], useNA="always"))
+}
+j <- which(is.na(mv1$patient_id))
+mv1 <- mv1[-j, 1:(i1-1)]
+str(mv1)
+head(mv1)
+tail(mv1)
+str(mv3)
+head(mv3)
+tail(mv3)
+```
+
+
+MITRAL
+ 
+1.	Arithmetic data for columns where possible – mean, median, SD, range
+2.	What is the long-term survival in children who have had prosthetic MVR?
+3.	Relationship of survival to
+a.  Age at 1st MVR (P-B) `r names(mv1)[2]` and `r names(mv1)[16]`
+b.  Weight at 1st MVR (Q) `r names(mv1)[17]`
+c.  Valve type at 1st MVR (N, but also S) `r names(mv1[c(14, 19)])`
+d.  Valve size at 1st MVR (R)
+e.  Underlying disease (M)
+f.  Underlying hemodynamic mechanism – MR versus MS versus both (O)
+g.  Perfusion time (T)
+h.  Concomitant prosthetic AVR (V)
+i.  Initial Hospital length of stay (U-P)
+j.  Era effect - < 1990 versus 1990s and up to 2003 (P)
+k.  Geography – State (F)
+l.  Institution (not important)
+4.	Causes of death – big piles only (Tab 3, D and E)
+5.	Early deaths (PCCC) versus late deaths (NDI) – compare profiles (H versus BI)
+6.	Interactions (think about it)
+7.	Confounders – collinearity
+8.	Need competing risk plot – I need to think about what goes in this once we see some results
+9.	Redo stuff – we may not have time for this before abstract deadline
+ 
+AORTIC
+ 
+1.	Arithmetic data for columns where possible – mean, median, SD, range
+2.	What is the long-term survival of children with AVR?
+3.	Head to head comparison of Ross versus Bio prosthesis versus Mechanical prosthesis looking at survival within the 3 groups and relation to following
+ 
+Age at 1st AVR
+Weight at 1st AVR
+Valve type at 1st AVR
+Valve size at 1st AVR
+Underlying disease
+Underlying hemodynamic mechanism – AR versus AS versus both
+Perfusion time
+Concomitant prosthetic MVR
+Initial Hospital length of stay
+Era effect - < 1990 versus 1990s and up to 2003
+Geography – State 
+Institution
+4.	Causes of death – Big piles only
+5.	Early deaths (PCCC) versus late deaths (NDI) – compare profiles
+6.	Interactions
+7.	Confounders – collinearity
+8.	Kaplan Meir – Ross versus Bio versus Mechanical AVR
+9.	Competing risk – will think thru this some more
+10.	Redo stuff – we may not have time for this before abstract deadline
+ 
+```{r examine-dates}
+isolate_month <- function(v) {
+  v                                             %>%
+    gsub("/.*", "", .)                          %>%
+    gsub("-.*", "", .)                          %>%
+    return
+}
+isolate_day <- function(v) {
+  v                                             %>%
+    sub("^.*?/", "", .)                         %>%
+    sub("/.*$?", "", .)                         %>%
+    sub("^.*?-", "", .)                         %>%
+    sub("-.*$?", "", .)                         %>%
+    return
+}
+isolate_year <- function(v) {
+  v                                             %>%
+    sub("^.*/", "", .)                          %>%
+    sub("^.*-", "", .)                          %>%
+    return
+}
+examine_dates <- function(v) {
+  two_slashes <- grepl("/", sub("/", "", v))
+  two_dashes  <- grepl("-", sub("-", "", v))
+  short_year  <- nchar(isolate_year(v))==2
+  special_cases <- 
+    ! (two_slashes | two_dashes) |
+    short_year                   |
+    is.na(v)
+  if (sum(special_cases)>0) {
+    cat("\n\n")
+    cat("Special cases")
+    v[special_cases]                            %>%
+      table(useNA="ifany")                      %>%
+      addmargins                                %>%
+      print
+  }
+  cat("\n\n")
+  cat("Month")
+  v[!special_cases]                             %>%
+    isolate_month                               %>%
+    as.numeric                                  %>%
+    table(useNA="always")                       %>%
+    addmargins                                  %>%
+    print
+  cat("\n\n")
+  cat("Day")
+  v[!special_cases]                             %>%
+    isolate_day                                 %>%
+    as.numeric                                  %>%
+    table(useNA="always")                       %>%
+    addmargins                                  %>%
+    print
+  cat("\n\n")
+  cat("Year")
+  v[!special_cases]                             %>%
+    isolate_year                                %>%
+    as.numeric                                  %>%
+    table(useNA="always")                       %>%
+    addmargins                                  %>%
+    print
+}
+dlist1 <- c(
+  "birthdate",
+  "first_admit_date",
+  "date_of_valve_replacement",
+  "discharge_date",
+  "date_of_valve_replacement_1",
+  "discharge_date_1",
+  "date_of_valve_replacement_2",
+  "discharge_date_2",
+  "unos_init_date",
+  "unos_end_date",
+  "unos_tx_date",
+  "unos_re_tx_date",
+  "pccc_tx_date",
+  "ndi_date_of_death")
+for (d in dlist1) {
+  cat("\n\n*** ")
+  cat(d)
+  examine_dates(mv1[, d]) 
+}
+{
+  cat("\n\n")
+  cat("date_of_death")
+  examine_dates(mv3$date_of_death)
+}
+```
+
+```{r fix_dates}
+# change any year that is listed as 1902 to missing (999)
+fix_list1 <- "date_of_valve_replacement"
+for (d in fix_list1) {
+  v <- mv1[, d]
+  double_delimiter <-  grepl("[-/].*[-/]", v)
+  single_delimiter <-  grepl("[-/]", v) & ! double_delimiter
+  absent_delimiter <- !grepl("[-/]", v)
+  year_only <- absent_delimiter & as.numeric(v) %in% 1950:2020
+  short_year  <- nchar(isolate_year(v))==2
+  missing_code <- absent_delimiter & !year_only
+  double_00 <- grepl("00/00", v)
+  single_00 <- grepl("/00/",  v) & !double_00 
+  cat("\n\nMissing code\n")
+  v[missing_code] %>% unique %>% sort %>% print
+  cat("\n\nYear only\n")
+  v[year_only]        %>% unique %>% sort %>% print
+  cat("\n\nSingle delimiter\n")
+  v[single_delimiter] %>% unique %>% sort %>% print
+  cat("\n\nDouble 00\n")
+  v[double_00]        %>% unique %>% sort %>% print
+  cat("\n\nSingle 00\n")
+  v[single_00]        %>% unique %>% sort %>% print
+  cat("\n\n")
+
+  w <- v
+  yr <- isolate_year()
+  w[short_year] <- sub("[/-]..")
+  w[year_only] <- paste0("06/30/", v[year_only])
+  w[single_delimiter] <- sub("/", "/15/", v[single_delimiter])
+  w[single_00] <- sub("/00/", "/15/", v[single_00])
+  w[double_00] <- sub("00/00", "06/30", v[double_00])
+  print(data.frame(changes=paste(v, "changes to", w)[v!=w]))
+}
