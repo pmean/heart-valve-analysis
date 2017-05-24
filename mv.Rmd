@@ -208,6 +208,15 @@ length(unique(mv3$patientid))
 length(intersect(mv1$patient_id, mv3$patientid))
 length(setdiff(mv1$patient_id, mv3$patientid))
 length(setdiff(mv3$patientid, mv1$patient_id))
+setdiff(mv3$patientid, mv1$patient_id)
+mv3                                             %>%
+  rename(patient_id=patientid)                  %>%
+  select(patient_id, date_of_death)            %>%
+  inner_join(mv1)                               %>%
+  select(patient_id, ndi_date_of_death, date_of_death) -> mv4
+dim(mv4)
+sum(mv4$ndi_date_of_death != mv4$date_of_death)
+sum(mv1$ndi_date_of_death == "")
 mv3                                             %>%
   rename(patient_id=patientid)                  %>%
   select(patient_id, date_of_death)            %>%
