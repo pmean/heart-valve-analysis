@@ -9,6 +9,7 @@ output: html_document
 library(dplyr)
 library(lubridate)
 library(magrittr)
+library(survival)
 ```
 
 ```{r read-data}
@@ -195,4 +196,41 @@ for (d in fix_list1) {
   w[single_00] <- sub("/00/", "/15/", v[single_00])
   w[double_00] <- sub("00/00", "06/30", v[double_00])
   print(data.frame(changes=paste(v, "changes to", w)[v!=w]))
+  mv1$date_of_valve_replacement_recode <- w
 }
+```
+
+```{r merge}
+dim(mv1)
+length(unique(mv1$patient_id))
+dim(mv3)
+length(unique(mv3$patientid))
+length(intersect(mv1$patient_id, mv3$patientid))
+length(setdiff(mv1$patient_id, mv3$patientid))
+length(setdiff(mv3$patientid, mv1$patient_id))
+mv3                                             %>%
+  rename(patient_id=patientid)                  %>%
+  select(patient_id, date_of_death)            %>%
+  inner_join(mv1)                               %>%
+  select(patient_id, ndi_date_of_death, date_of_death) -> mv4
+dim(mv4)
+sum(mv4$ndi_date_of_death != mv4$date_of_death)
+sum(mv1$ndi_date_of_death == "")
+```
+
+```{r kaplan-meier}
+d0 <- mdy(mv1$date_of_valve_replacement_recode) - mdy("1/1/1950")
+d1 <- mdy(mv1$ndi_date_of_death)                - mdy("1/1/1950")
+d2 <- rep(mdy("12/30/2014")-mdy("1/1/1950"), dim(mv1)[2])
+sum(is.na(d0))
+cbind(d0, d1, d2)
+sum(is.na(d0))
+sum(is.na(d1))
+c1 <- as.numeric(d1-d0)
+c2 <- as.numeric(d2-d0)
+censor <- as.numeric(is.finite(c1))
+c1[censor] <- c2[censor]
+c1
+su <- Surv(time=c1, event=censor)
+plot(survfit(su~1))
+```
