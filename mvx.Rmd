@@ -26,6 +26,7 @@ for (i in i1:i2) {
   print(table(mv1[, i], useNA="always"))
 }
 j <- which(is.na(mv1$patient_id))
+mv1[j, ]
 mv1 <- mv1[-j, 1:(i1-1)]
 str(mv1)
 head(mv1)

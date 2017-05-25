@@ -5,6 +5,7 @@ date: "May 23, 2017"
 output: html_document
 ---
 
+
 ```{r preliminaries, echo=FALSE}
 library(dplyr)
 library(lubridate)
@@ -19,65 +20,118 @@ names(mv1) %<>% tolower
 names(mv3) %<>% tolower
 names(mv1) %<>% gsub("\\.", "_", .)
 names(mv3) %<>% gsub("\\.", "_", .)
-str(mv1)
-head(mv1)
-tail(mv1)
-str(mv3)
-head(mv3)
-tail(mv3)
+names(mv1) %<>% gsub("_+",  "_", .)
+names(mv3) %<>% gsub("_+",  "_", .)
+names(mv1) %<>% gsub("_$",  "",  .)
+names(mv3) %<>% gsub("_$",  "",  .)
 ```
 
 
 MITRAL
  
-1.	Arithmetic data for columns where possible – mean, median, SD, range
-2.	What is the long-term survival in children who have had prosthetic MVR?
-3.	Relationship of survival to
-a.  Age at 1st MVR (P-B) `r names(mv1)[2]` and `r names(mv1)[16]`
-b.  Weight at 1st MVR (Q) `r names(mv1)[17]`
-c.  Valve type at 1st MVR (N, but also S) `r names(mv1[c(14, 19)])`
-d.  Valve size at 1st MVR (R)
-e.  Underlying disease (M)
-f.  Underlying hemodynamic mechanism – MR versus MS versus both (O)
-g.  Perfusion time (T)
-h.  Concomitant prosthetic AVR (V)
-i.  Initial Hospital length of stay (U-P)
-j.  Era effect - < 1990 versus 1990s and up to 2003 (P)
-k.  Geography – State (F)
-l.  Institution (not important)
+1. Arithmetic data for columns where possible – mean, median, SD, range
+
+2. What is the long-term survival in children who have had prosthetic MVR?
+
+3. Relationship of survival to
+* Age at 1st MVR (P-B)
+`r names(mv1)[2]`
+`r names(mv1)[16]`
+* Weight at 1st MVR (Q)
+`r names(mv1)[17]`
+* Valve type at 1st MVR (N, but also S)
+`r names(mv1)[14]`
+`r names(mv1)[19]`
+* Valve size at 1st MVR (R)
+`r names(mv1)[18]`
+* Underlying disease (M)
+`r names(mv1)[13]`
+* Underlying hemodynamic mechanism – MR versus MS versus both (O)
+`r names(mv1)[15]`
+* Perfusion time (T)
+`r names(mv1)[20]`
+* Concomitant prosthetic AVR (V)
+`r names(mv1)[22]`
+* Initial Hospital length of stay (U-P)
+`r names(mv1)[21]` MINUS 
+`r names(mv1)[16]`
+* Era effect - < 1990 versus 1990s and up to 2003 (P)
+`r names(mv1)[16]`
+* Geography – State (F)
+`r names(mv1)[6]`
+* Institution (not important)
+
 4.	Causes of death – big piles only (Tab 3, D and E)
+`r names(mv3)[4]` AND
+`r names(mv3)[5]`
+
 5.	Early deaths (PCCC) versus late deaths (NDI) – compare profiles (H versus BI)
+`r names(mv1)[8]` AND
+`r names(mv1)[61]`
+
 6.	Interactions (think about it)
+
 7.	Confounders – collinearity
+
 8.	Need competing risk plot – I need to think about what goes in this once we see some results
+
 9.	Redo stuff – we may not have time for this before abstract deadline
  
 AORTIC
  
 1.	Arithmetic data for columns where possible – mean, median, SD, range
+
 2.	What is the long-term survival of children with AVR?
+
 3.	Head to head comparison of Ross versus Bio prosthesis versus Mechanical prosthesis looking at survival within the 3 groups and relation to following
  
-Age at 1st AVR
-Weight at 1st AVR
-Valve type at 1st AVR
-Valve size at 1st AVR
-Underlying disease
-Underlying hemodynamic mechanism – AR versus AS versus both
-Perfusion time
-Concomitant prosthetic MVR
-Initial Hospital length of stay
-Era effect - < 1990 versus 1990s and up to 2003
-Geography – State 
-Institution
+* Age at 1st AVR
+* Weight at 1st AVR
+* Valve type at 1st AVR
+* Valve size at 1st AVR
+* Underlying disease
+* Underlying hemodynamic mechanism – AR versus AS versus both
+* Perfusion time
+* Concomitant prosthetic MVR
+* Initial Hospital length of stay
+* Era effect - < 1990 versus 1990s and up to 2003
+* Geography – State 
+* Institution
+
 4.	Causes of death – Big piles only
+
 5.	Early deaths (PCCC) versus late deaths (NDI) – compare profiles
+
 6.	Interactions
+
 7.	Confounders – collinearity
+
 8.	Kaplan Meir – Ross versus Bio versus Mechanical AVR
+
 9.	Competing risk – will think thru this some more
+
 10.	Redo stuff – we may not have time for this before abstract deadline
- 
+
+
+```{r peek}
+i1 <- which(names(mv1)=="x")
+i2 <- dim(mv1)[2]
+for (i in i1:i2) {
+  print(table(mv1[, i], useNA="always"))
+}
+j <- which(is.na(mv1$patient_id))
+mv1[j, ]
+mv1 <- mv1[-j, 1:(i1-1)]
+
+str(mv1)
+head(mv1)
+tail(mv1)
+
+str(mv3)
+head(mv3)
+tail(mv3)
+```
+
 ```{r examine-dates}
 isolate_month <- function(v) {
   v                                             %>%
@@ -95,10 +149,8 @@ isolate_day <- function(v) {
 }
 isolate_year <- function(v) {
   v                                             %>%
-    sub("^.*?/", "", .)                         %>%
-    sub("/.*$?", "", .)                         %>%
-    sub("^.*?-", "", .)                         %>%
-    sub("-.*$?", "", .)                         %>%
+    sub("^.*/", "", .)                          %>%
+    sub("^.*-", "", .)                          %>%
     return
 }
 examine_dates <- function(v) {
@@ -174,7 +226,7 @@ for (d in fix_list1) {
   double_delimiter <-  grepl("[-/].*[-/]", v)
   single_delimiter <-  grepl("[-/]", v) & ! double_delimiter
   absent_delimiter <- !grepl("[-/]", v)
-  year_only <- absent_delimiter & as.numeric(v) %in% 1950:2020
+  year_only <- absent_delimiter & as.numeric(v) %in% as.character(1950:2020)
   missing_code <- absent_delimiter & !year_only
   double_00 <- grepl("00/00", v)
   single_00 <- grepl("/00/",  v) & !double_00 
@@ -227,19 +279,71 @@ sum(mv4$ndi_date_of_death != mv4$date_of_death)
 sum(mv1$ndi_date_of_death == "")
 ```
 
+```{r descriptives}
+v_list1 <- c(
+  "weight_at_surgery_kg",
+  "cpb_time_minutes"
+)
+for (i in v_list1) {
+  n888 <- sum(mv1[, i]==888)
+  n999 <- sum(mv1[, i]==999)
+  mv1[, i] <- ifelse(mv1[, i] %in% c(888, 999), NA, mv1[, i])
+  cat("\n\n")
+  cat(i)
+  cat("\n")
+  cat(paste("\nCount of 888 =", n888))
+  cat(paste("\nCount of 999 =", n999))
+  cat("\n")
+  print(summary(mv1[, i]))
+}
+v_list2 <- c(
+  "mechanical_valve_used_y_n",
+  "valve_make",
+  "valve_size_mm",
+  "for_all_columns_999_unknown_888_n_a_underlying_disease_ex_cavc_etc",
+  "underlying_lesion_regurgitation_or_stenosis",
+  "additional_valve_replaced_aortic_pulm_tri",
+  "state"
+)
+for (i in v_list2) {
+  n888 <- sum(mv1[, i]=="888")
+  n999 <- sum(mv1[, i]=="999")
+  mv1[, i] %<>% sub("^ +", "", .)
+  mv1[, i] %<>% sub(" +$", "", .)
+  mv1[, i] %<>% sub(rawToChar(as.raw(160)), "", .)
+  mv1[, i] <- ifelse(mv1[, i] %in% c("888", "999"), NA, mv1[, i])
+  cat("\n\n")
+  cat(i)
+  cat("\n")
+  cat(paste("\nCount of 888 =", n888))
+  cat(paste("\nCount of 999 =", n999))
+  cat("\n")
+  print(table(mv1[, i], useNA="always"))
+}
+```
+
 ```{r kaplan-meier}
-d0 <- mdy(mv1$date_of_valve_replacement_recode) - mdy("1/1/1950")
-d1 <- mdy(mv1$ndi_date_of_death)                - mdy("1/1/1950")
-d2 <- rep(mdy("12/30/2014")-mdy("1/1/1950"), dim(mv1)[2])
-sum(is.na(d0))
-cbind(d0, d1, d2)
+# Check for dates that will not convert.
+m_codes <- mv1$date_of_valve_replacement_recode %in% c("888", "999")
+sum(m_codes)
+mv1 %>% filter(!m_codes) -> mv1x
+dim(mv1x)
+d0 <- mdy(mv1x$date_of_valve_replacement_recode) - mdy("1/1/1950")
+d1 <- mdy(mv1x$ndi_date_of_death)                - mdy("1/1/1950")
+d2 <- rep(mdy("12/30/2014")-mdy("1/1/1950"), dim(mv1x)[1])
 sum(is.na(d0))
 sum(is.na(d1))
-c1 <- as.numeric(d1-d0)
-c2 <- as.numeric(d2-d0)
+c1 <- as.numeric(d1-d0) / 365.25
+c2 <- as.numeric(d2-d0) / 365.25
 censor <- as.numeric(is.finite(c1))
-c1[censor] <- c2[censor]
-c1
-su <- Surv(time=c1, event=censor)
+table(censor)
+c1[censor==0] <- c2[censor==0]
+su <- Surv(time=round(c1, 4), event=censor)
+su
 plot(survfit(su~1))
+plot(survfit(su~mv1x$mechanical_valve_used_y_n))
+```
+
+```{r save-everything, echo=FALSE}
+save.image("mv.RData")
 ```
