@@ -139,14 +139,33 @@ $(document).ready(function () {
 ##     date</code></pre>
 <pre class="r"><code>av1 &lt;- read.csv(&quot;aorta1.csv&quot;, as.is=TRUE)
 av3 &lt;- read.csv(&quot;aorta3.csv&quot;, as.is=TRUE)
+av4 &lt;- read.csv(&quot;aorta4.csv&quot;, as.is=TRUE)
+
+print(names(av1)[1])</code></pre>
+<pre><code>## [1] &quot;ï..PATIENTID&quot;</code></pre>
+<pre class="r"><code>names(av1)[1] &lt;- &quot;id&quot;
+print(names(av3)[1])</code></pre>
+<pre><code>## [1] &quot;ï..PATIENTID&quot;</code></pre>
+<pre class="r"><code>names(av3)[1] &lt;- &quot;id&quot;
+print(names(av4)[1])</code></pre>
+<pre><code>## [1] &quot;ï..PATIENTID&quot;</code></pre>
+<pre class="r"><code>names(av4)[1] &lt;- &quot;id&quot;
+
 names(av1) %&lt;&gt;% tolower
 names(av3) %&lt;&gt;% tolower
+names(av4) %&lt;&gt;% tolower
+
 names(av1) %&lt;&gt;% gsub(&quot;\\.&quot;, &quot;_&quot;, .)
 names(av3) %&lt;&gt;% gsub(&quot;\\.&quot;, &quot;_&quot;, .)
+names(av4) %&lt;&gt;% gsub(&quot;\\.&quot;, &quot;_&quot;, .)
+
 names(av1) %&lt;&gt;% gsub(&quot;_+&quot;,  &quot;_&quot;, .)
 names(av3) %&lt;&gt;% gsub(&quot;_+&quot;,  &quot;_&quot;, .)
+names(av4) %&lt;&gt;% gsub(&quot;_+&quot;,  &quot;_&quot;, .)
+
 names(av1) %&lt;&gt;% gsub(&quot;_$&quot;,  &quot;&quot;,  .)
-names(av3) %&lt;&gt;% gsub(&quot;_$&quot;,  &quot;&quot;,  .)</code></pre>
+names(av3) %&lt;&gt;% gsub(&quot;_$&quot;,  &quot;&quot;,  .)
+names(av4) %&lt;&gt;% gsub(&quot;_$&quot;,  &quot;&quot;,  .)</code></pre>
 <p>AORTIC</p>
 <ol style="list-style-type: decimal">
 <li><p>Arithmetic data for columns where possible – mean, median, SD, range</p></li>
@@ -176,223 +195,82 @@ names(av3) %&lt;&gt;% gsub(&quot;_$&quot;,  &quot;&quot;,  .)</code></pre>
 <li><p>Competing risk – will think thru this some more</p></li>
 <li><p>Redo stuff – we may not have time for this before abstract deadline</p></li>
 </ol>
-<pre class="r"><code>i1 &lt;- which(names(av1)==&quot;x&quot;)
-i2 &lt;- dim(av1)[2]
-for (i in i1:i2) {
-  print(table(av1[, i], useNA=&quot;always&quot;))
+<pre class="r"><code>j1 &lt;- which(grepl(&quot;^x&quot;,names(av1)))
+print(names(av1)[j1])</code></pre>
+<pre><code>##  [1] &quot;x2nd_redo_y_n&quot; &quot;x&quot;             &quot;x_1&quot;           &quot;x_2&quot;          
+##  [5] &quot;x_3&quot;           &quot;x_4&quot;           &quot;x_5&quot;           &quot;x_6&quot;          
+##  [9] &quot;x_7&quot;           &quot;x_8&quot;           &quot;x_9&quot;           &quot;x_10&quot;         
+## [13] &quot;x_11&quot;          &quot;x_12&quot;          &quot;x_13&quot;          &quot;x_14&quot;         
+## [17] &quot;x_15&quot;          &quot;x_16&quot;          &quot;x_17&quot;          &quot;x_18&quot;         
+## [21] &quot;x_19&quot;          &quot;x_20&quot;          &quot;x_21&quot;          &quot;x_22&quot;         
+## [25] &quot;x_23&quot;          &quot;x_24&quot;          &quot;x_25&quot;          &quot;x_26&quot;         
+## [29] &quot;x_27&quot;          &quot;x_28&quot;          &quot;x_29&quot;          &quot;x_30&quot;         
+## [33] &quot;x_31&quot;          &quot;x_32&quot;          &quot;x_33&quot;          &quot;x_34&quot;         
+## [37] &quot;x_35&quot;          &quot;x_36&quot;          &quot;x_37&quot;          &quot;x_38&quot;         
+## [41] &quot;x_39&quot;          &quot;x_40&quot;          &quot;x_41&quot;          &quot;x_42&quot;         
+## [45] &quot;x_43&quot;          &quot;x_44&quot;          &quot;x_45&quot;          &quot;x_46&quot;         
+## [49] &quot;x_47&quot;          &quot;x_48&quot;          &quot;x_49&quot;          &quot;x_50&quot;         
+## [53] &quot;x_51&quot;          &quot;x_52&quot;          &quot;x_53&quot;          &quot;x_54&quot;         
+## [57] &quot;x_55&quot;          &quot;x_56&quot;          &quot;x_57&quot;          &quot;x_58&quot;         
+## [61] &quot;x_59&quot;          &quot;x_60&quot;          &quot;x_61&quot;          &quot;x_62&quot;         
+## [65] &quot;x_63&quot;          &quot;x_64&quot;          &quot;x_65&quot;          &quot;x_66&quot;         
+## [69] &quot;x_67&quot;</code></pre>
+<pre class="r"><code>j1 &lt;- j1[-1]
+j3 &lt;- which(grepl(&quot;^x&quot;,names(av3)))
+print(j3)</code></pre>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>j4 &lt;- which(grepl(&quot;^x&quot;,names(av4)))
+print(names(av4)[j4])</code></pre>
+<pre><code>## [1] &quot;x&quot;   &quot;x_1&quot; &quot;x_2&quot; &quot;x_3&quot; &quot;x_4&quot;</code></pre>
+<pre class="r"><code>for (j in names(av1)[j1]) {
+  x &lt;- av1[, j]
+  n &lt;- length(x)
+  is_empty &lt;- is.na(x) | grepl(&quot;^[[:space:]]+$&quot;, x)
+  if (sum(is_empty)==n) {next}
+  cat(&quot;\n\n&quot;)
+  cat(j)
+  cat(&quot;\n&quot;)
+  print(table(x[!is_empty]))
+}
+
+i1 &lt;- which(is.na(av1$id))
+print(i1)</code></pre>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>i3 &lt;- which(is.na(av3$id))
+print(i3)</code></pre>
+<pre><code>##  [1] 296 297 298 299 300 301 302 303 304 305 306 307 308 309 310 311 312
+## [18] 313 314 315 316 317</code></pre>
+<pre class="r"><code>i4 &lt;- which(is.na(av4$id))
+print(i4)</code></pre>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>for (j in names(av3)) {
+  x &lt;- av3[i3, j]
+  n &lt;- length(x)
+  is_empty &lt;- is.na(x) | x==&quot;&quot; | grepl(&quot;^[[:space:]]+$&quot;, x)
+  if (sum(is_empty)==n) {next}
+  cat(&quot;\n\n&quot;)
+  cat(j)
+  cat(&quot;: &quot;)
+  cat(i3[!is_empty])
+  print(table(x[!is_empty]))
 }</code></pre>
 <pre><code>## 
-## &lt;NA&gt; 
-## 1202 
 ## 
-## &lt;NA&gt; 
-## 1202 
+## ea_desc_2: 296
+## complex congenital heart disease  
+##                                 1 
 ## 
-## &lt;NA&gt; 
-## 1202 
 ## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202 
-## 
-## &lt;NA&gt; 
-## 1202</code></pre>
-<pre class="r"><code>j &lt;- which(is.na(av1$i_patient_id))</code></pre>
-<pre><code>## Warning in is.na(av1$i_patient_id): is.na() applied to non-(list or vector)
-## of type 'NULL'</code></pre>
-<pre class="r"><code>av1 &lt;- av1[, 1:(i1-1)]
+## ea_desc_3: 296
+## shock liver with extensive centrilobular necrosis 
+##                                                 1</code></pre>
+<pre class="r"><code>av1 &lt;- av1[, -j1]
+
+av3 &lt;- av3[-i3, ]
 
 str(av1)</code></pre>
 <pre><code>## 'data.frame':    1202 obs. of  67 variables:
-##  $ ï_patientid                                  : num  2.89e+10 2.67e+10 2.69e+10 2.70e+10 2.74e+10 ...
+##  $ id                                           : num  2.89e+10 2.67e+10 2.69e+10 2.70e+10 2.74e+10 ...
 ##  $ birthdate                                    : chr  &quot;1/23/1989&quot; &quot;10/12/1967&quot; &quot;7/21/1969&quot; &quot;6/23/1970&quot; ...
 ##  $ race                                         : chr  &quot;&quot; &quot;White&quot; &quot;Unknown&quot; &quot;&quot; ...
 ##  $ ethnicity                                    : chr  &quot;Unknown&quot; &quot;NotHispanic&quot; &quot;Unknown&quot; &quot;&quot; ...
@@ -460,7 +338,7 @@ str(av1)</code></pre>
 ##  $ pulmonary_under18                            : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
 ##  $ av_under18                                   : logi  NA NA NA NA NA NA ...</code></pre>
 <pre class="r"><code>head(av1)</code></pre>
-<pre><code>##   ï_patientid  birthdate    race   ethnicity first_admit_date state sex
+<pre><code>##            id  birthdate    race   ethnicity first_admit_date state sex
 ## 1 28901230007  1/23/1989             Unknown         8/3/1998    TX   M
 ## 2 26710120000 10/12/1967   White NotHispanic         6/8/1982    MN   M
 ## 3 26907210000  7/21/1969 Unknown     Unknown        1/20/1986    MO   M
@@ -608,7 +486,7 @@ str(av1)</code></pre>
 ## 5         NA
 ## 6         NA</code></pre>
 <pre class="r"><code>tail(av1)</code></pre>
-<pre><code>##      ï_patientid  birthdate  race   ethnicity first_admit_date state sex
+<pre><code>##               id  birthdate  race   ethnicity first_admit_date state sex
 ## 1197 26601040001   1/4/1966 White     Unknown        6/20/1983    BC   M
 ## 1198 27110300001 10/30/1971 White     Unknown        5/30/1989    OH   M
 ## 1199 26910180000 10/18/1969                          6/23/1986    TX   F
@@ -756,8 +634,8 @@ str(av1)</code></pre>
 ## 1201         NA
 ## 1202         NA</code></pre>
 <pre class="r"><code>str(av3)</code></pre>
-<pre><code>## 'data.frame':    317 obs. of  86 variables:
-##  $ ï_patientid            : num  2.20e+10 2.21e+10 2.22e+10 2.29e+10 2.29e+10 ...
+<pre><code>## 'data.frame':    295 obs. of  86 variables:
+##  $ id                     : num  2.20e+10 2.21e+10 2.22e+10 2.29e+10 2.29e+10 ...
 ##  $ date_of_death          : chr  &quot;08-29-1994&quot; &quot;03-22-1995&quot; &quot;09-02-1998&quot; &quot;05-21-2008&quot; ...
 ##  $ state_of_death         : chr  &quot;PENNSYLVANIA&quot; &quot;MINNESOTA&quot; &quot;MINNESOTA&quot; &quot;MINNESOTA&quot; ...
 ##  $ cardiac_non_cardiac_y_n: chr  &quot;N&quot; &quot;Y&quot; &quot;N&quot; &quot;N&quot; ...
@@ -844,7 +722,7 @@ str(av1)</code></pre>
 ##  $ ra_20                  : logi  NA NA NA NA NA NA ...
 ##  $ ra_desc_20             : logi  NA NA NA NA NA NA ...</code></pre>
 <pre class="r"><code>head(av3)</code></pre>
-<pre><code>##   ï_patientid date_of_death state_of_death cardiac_non_cardiac_y_n
+<pre><code>##            id date_of_death state_of_death cardiac_non_cardiac_y_n
 ## 1 22006190000    08-29-1994   PENNSYLVANIA                       N
 ## 2 22107130000    03-22-1995      MINNESOTA                       Y
 ## 3 22206220000    09-02-1998      MINNESOTA                       N
@@ -1069,83 +947,232 @@ str(av1)</code></pre>
 ## 5         NA
 ## 6         NA</code></pre>
 <pre class="r"><code>tail(av3)</code></pre>
-<pre><code>##     ï_patientid date_of_death state_of_death cardiac_non_cardiac_y_n
-## 312          NA                                                     
-## 313          NA                                                     
-## 314          NA                                                     
-## 315          NA                                                     
-## 316          NA                                                     
-## 317          NA                                                     
-##     cause_of_death cause_of_death_desc ea_1 ea_desc_1 ea_2 ea_desc_2 ea_3
-## 312                                                                      
-## 313                                                                      
-## 314                                                                      
-## 315                                                                      
-## 316                                                                      
-## 317                                                                      
-##     ea_desc_3 ea_4 ea_desc_4 ea_5 ea_desc_5 ea_6 ea_desc_6 ea_7 ea_desc_7
-## 312                                                                      
-## 313                                                                      
-## 314                                                                      
-## 315                                                                      
-## 316                                                                      
-## 317                                                                      
-##     ea_8 ea_desc_8 ea_9 ea_desc_9 ea_10 ea_desc_10 ea_11 ea_desc_11 ea_12
-## 312                                  NA         NA    NA         NA    NA
-## 313                                  NA         NA    NA         NA    NA
-## 314                                  NA         NA    NA         NA    NA
-## 315                                  NA         NA    NA         NA    NA
-## 316                                  NA         NA    NA         NA    NA
-## 317                                  NA         NA    NA         NA    NA
-##     ea_desc_12 ea_13 ea_desc_13 ea_14 ea_desc_14 ea_15 ea_desc_15 ea_16
-## 312         NA    NA         NA    NA         NA    NA         NA    NA
-## 313         NA    NA         NA    NA         NA    NA         NA    NA
-## 314         NA    NA         NA    NA         NA    NA         NA    NA
-## 315         NA    NA         NA    NA         NA    NA         NA    NA
-## 316         NA    NA         NA    NA         NA    NA         NA    NA
-## 317         NA    NA         NA    NA         NA    NA         NA    NA
-##     ea_desc_16 ea_17 ea_desc_17 ea_18 ea_desc_18 ea_19 ea_desc_19 ea_20
-## 312         NA    NA         NA    NA         NA    NA         NA    NA
-## 313         NA    NA         NA    NA         NA    NA         NA    NA
-## 314         NA    NA         NA    NA         NA    NA         NA    NA
-## 315         NA    NA         NA    NA         NA    NA         NA    NA
-## 316         NA    NA         NA    NA         NA    NA         NA    NA
-## 317         NA    NA         NA    NA         NA    NA         NA    NA
-##     ea_desc_20 ra_1 ra_desc_1 ra_2 ra_desc_2 ra_3 ra_desc_3 ra_4 ra_desc_4
-## 312         NA                                                            
-## 313         NA                                                            
-## 314         NA                                                            
-## 315         NA                                                            
-## 316         NA                                                            
-## 317         NA                                                            
-##     ra_5 ra_desc_5 ra_6 ra_desc_6 ra_7 ra_desc_7 ra_8 ra_desc_8 ra_9
-## 312                                                                 
-## 313                                                                 
-## 314                                                                 
-## 315                                                                 
-## 316                                                                 
-## 317                                                                 
-##     ra_desc_9 ra_10 ra_desc_10 ra_11 ra_desc_11 ra_12 ra_desc_12 ra_13
-## 312              NA         NA    NA         NA    NA         NA    NA
-## 313              NA         NA    NA         NA    NA         NA    NA
-## 314              NA         NA    NA         NA    NA         NA    NA
-## 315              NA         NA    NA         NA    NA         NA    NA
-## 316              NA         NA    NA         NA    NA         NA    NA
-## 317              NA         NA    NA         NA    NA         NA    NA
-##     ra_desc_13 ra_14 ra_desc_14 ra_15 ra_desc_15 ra_16 ra_desc_16 ra_17
-## 312         NA    NA         NA    NA         NA    NA         NA    NA
-## 313         NA    NA         NA    NA         NA    NA         NA    NA
-## 314         NA    NA         NA    NA         NA    NA         NA    NA
-## 315         NA    NA         NA    NA         NA    NA         NA    NA
-## 316         NA    NA         NA    NA         NA    NA         NA    NA
-## 317         NA    NA         NA    NA         NA    NA         NA    NA
-##     ra_desc_17 ra_18 ra_desc_18 ra_19 ra_desc_19 ra_20 ra_desc_20
-## 312         NA    NA         NA    NA         NA    NA         NA
-## 313         NA    NA         NA    NA         NA    NA         NA
-## 314         NA    NA         NA    NA         NA    NA         NA
-## 315         NA    NA         NA    NA         NA    NA         NA
-## 316         NA    NA         NA    NA         NA    NA         NA
-## 317         NA    NA         NA    NA         NA    NA         NA</code></pre>
+<pre><code>##              id date_of_death state_of_death cardiac_non_cardiac_y_n
+## 290 30112060004    01-04-2002          TEXAS                       Y
+## 291 30201130005    11-20-2007   MASSACHUSETT                       Y
+## 292 30203030000    12-06-2006      MINNESOTA                       Y
+## 293 30207170001    12-02-2002      LOUISIANA                       Y
+## 294 30208190003    12-08-2011     WASHINGTON                       N
+## 295 30210220003    11-08-2002           IOWA                       Y
+##     cause_of_death
+## 290           Q228
+## 291           I219
+## 292           Q249
+## 293           I461
+## 294           V030
+## 295           Q230
+##                                                                     cause_of_death_desc
+## 290                                   Other congenital malformations of tricuspid valve
+## 291                                            Acute myocardial infarction, unspecified
+## 292                                       Congenital malformation of heart, unspecified
+## 293                                                  Sudden cardiac death, so described
+## 294 Pedestrian injured in collision with car, pick-up truck or van, nontraffic accident
+## 295                                                 Congenital stenosis of aortic valve
+##       ea_1
+## 290 11J969
+## 291 11I219
+## 292 11I978
+## 293 11I461
+## 294 11S099
+## 295 11Q230
+##                                                                          ea_desc_1
+## 290                                               Respiratory failure, unspecified
+## 291                                       Acute myocardial infarction, unspecified
+## 292 Other postprocedural disorders of circulatory system, not elsewhere classified
+## 293                                             Sudden cardiac death, so described
+## 294                                                     Unspecified injury of head
+## 295                                            Congenital stenosis of aortic valve
+##       ea_2
+## 290 12J189
+## 291 21I514
+## 292 61Q249
+## 293       
+## 294 12V030
+## 295       
+##                                                                               ea_desc_2
+## 290                                                              Pneumonia, unspecified
+## 291                                                            Myocarditis, unspecified
+## 292                                       Congenital malformation of heart, unspecified
+## 293                                                                                    
+## 294 Pedestrian injured in collision with car, pick-up truck or van, nontraffic accident
+## 295                                                                                    
+##       ea_3                                            ea_desc_3   ea_4
+## 290 31Q228    Other congenital malformations of tricuspid valve 41Q249
+## 291 22Q246                               Congenital heart block       
+## 292 62Y839                      Surgical procedure, unspecified       
+## 293                                                                   
+## 294 13S399 Unspecified injury of abdomen, lower back and pelvis       
+## 295                                                                   
+##                                         ea_desc_4   ea_5
+## 290 Congenital malformation of heart, unspecified 42Q228
+## 291                                                     
+## 292                                                     
+## 293                                                     
+## 294                                                     
+## 295                                                     
+##                                             ea_desc_5 ea_6 ea_desc_6 ea_7
+## 290 Other congenital malformations of tricuspid valve                    
+## 291                                                                      
+## 292                                                                      
+## 293                                                                      
+## 294                                                                      
+## 295                                                                      
+##     ea_desc_7 ea_8 ea_desc_8 ea_9 ea_desc_9 ea_10 ea_desc_10 ea_11
+## 290                                            NA         NA    NA
+## 291                                            NA         NA    NA
+## 292                                            NA         NA    NA
+## 293                                            NA         NA    NA
+## 294                                            NA         NA    NA
+## 295                                            NA         NA    NA
+##     ea_desc_11 ea_12 ea_desc_12 ea_13 ea_desc_13 ea_14 ea_desc_14 ea_15
+## 290         NA    NA         NA    NA         NA    NA         NA    NA
+## 291         NA    NA         NA    NA         NA    NA         NA    NA
+## 292         NA    NA         NA    NA         NA    NA         NA    NA
+## 293         NA    NA         NA    NA         NA    NA         NA    NA
+## 294         NA    NA         NA    NA         NA    NA         NA    NA
+## 295         NA    NA         NA    NA         NA    NA         NA    NA
+##     ea_desc_15 ea_16 ea_desc_16 ea_17 ea_desc_17 ea_18 ea_desc_18 ea_19
+## 290         NA    NA         NA    NA         NA    NA         NA    NA
+## 291         NA    NA         NA    NA         NA    NA         NA    NA
+## 292         NA    NA         NA    NA         NA    NA         NA    NA
+## 293         NA    NA         NA    NA         NA    NA         NA    NA
+## 294         NA    NA         NA    NA         NA    NA         NA    NA
+## 295         NA    NA         NA    NA         NA    NA         NA    NA
+##     ea_desc_19 ea_20 ea_desc_20 ra_1
+## 290         NA    NA         NA J189
+## 291         NA    NA         NA I219
+## 292         NA    NA         NA Q249
+## 293         NA    NA         NA I461
+## 294         NA    NA         NA V030
+## 295         NA    NA         NA Q230
+##                                                                               ra_desc_1
+## 290                                                              Pneumonia, unspecified
+## 291                                            Acute myocardial infarction, unspecified
+## 292                                       Congenital malformation of heart, unspecified
+## 293                                                  Sudden cardiac death, so described
+## 294 Pedestrian injured in collision with car, pick-up truck or van, nontraffic accident
+## 295                                                 Congenital stenosis of aortic valve
+##     ra_2
+## 290 J969
+## 291 I514
+## 292 I978
+## 293     
+## 294 S099
+## 295     
+##                                                                          ra_desc_2
+## 290                                               Respiratory failure, unspecified
+## 291                                                       Myocarditis, unspecified
+## 292 Other postprocedural disorders of circulatory system, not elsewhere classified
+## 293                                                                               
+## 294                                                     Unspecified injury of head
+## 295                                                                               
+##     ra_3                                            ra_desc_3 ra_4
+## 290 Q228    Other congenital malformations of tricuspid valve     
+## 291 Q246                               Congenital heart block     
+## 292 Y839                      Surgical procedure, unspecified     
+## 293                                                               
+## 294 S399 Unspecified injury of abdomen, lower back and pelvis     
+## 295                                                               
+##     ra_desc_4 ra_5 ra_desc_5 ra_6 ra_desc_6 ra_7 ra_desc_7 ra_8 ra_desc_8
+## 290                                                                      
+## 291                                                                      
+## 292                                                                      
+## 293                                                                      
+## 294                                                                      
+## 295                                                                      
+##     ra_9 ra_desc_9 ra_10 ra_desc_10 ra_11 ra_desc_11 ra_12 ra_desc_12
+## 290                   NA         NA    NA         NA    NA         NA
+## 291                   NA         NA    NA         NA    NA         NA
+## 292                   NA         NA    NA         NA    NA         NA
+## 293                   NA         NA    NA         NA    NA         NA
+## 294                   NA         NA    NA         NA    NA         NA
+## 295                   NA         NA    NA         NA    NA         NA
+##     ra_13 ra_desc_13 ra_14 ra_desc_14 ra_15 ra_desc_15 ra_16 ra_desc_16
+## 290    NA         NA    NA         NA    NA         NA    NA         NA
+## 291    NA         NA    NA         NA    NA         NA    NA         NA
+## 292    NA         NA    NA         NA    NA         NA    NA         NA
+## 293    NA         NA    NA         NA    NA         NA    NA         NA
+## 294    NA         NA    NA         NA    NA         NA    NA         NA
+## 295    NA         NA    NA         NA    NA         NA    NA         NA
+##     ra_17 ra_desc_17 ra_18 ra_desc_18 ra_19 ra_desc_19 ra_20 ra_desc_20
+## 290    NA         NA    NA         NA    NA         NA    NA         NA
+## 291    NA         NA    NA         NA    NA         NA    NA         NA
+## 292    NA         NA    NA         NA    NA         NA    NA         NA
+## 293    NA         NA    NA         NA    NA         NA    NA         NA
+## 294    NA         NA    NA         NA    NA         NA    NA         NA
+## 295    NA         NA    NA         NA    NA         NA    NA         NA</code></pre>
+<pre class="r"><code>str(av4)</code></pre>
+<pre><code>## 'data.frame':    22 obs. of  12 variables:
+##  $ id                     : num  2.66e+10 2.71e+10 2.74e+10 2.80e+10 2.84e+10 ...
+##  $ date_of_death          : chr  &quot;7/6/1983&quot; &quot;9/6/1984&quot; &quot;3/17/1989&quot; &quot;8/7/1993&quot; ...
+##  $ cardiac_non_cardiac_y_n: chr  &quot;N &quot; &quot;Y&quot; &quot;Y&quot; &quot;Y&quot; ...
+##  $ x                      : logi  NA NA NA NA NA NA ...
+##  $ cause_of_death_desc    : chr  &quot;acute diffuse hypoxic encephalopathy with tonsilar herniation&quot; &quot;Congestive heart failure&quot; &quot;cardiopulmonary arrest&quot; &quot;massive mediastinal hemorrhage&quot; ...
+##  $ x_1                    : logi  NA NA NA NA NA NA ...
+##  $ ea_desc_1              : chr  &quot;acute  hemorrhagic bronchopneumonia&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+##  $ x_2                    : logi  NA NA NA NA NA NA ...
+##  $ ea_desc_2              : chr  &quot;complex congenital heart disease &quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+##  $ x_3                    : logi  NA NA NA NA NA NA ...
+##  $ ea_desc_3              : chr  &quot;shock liver with extensive centrilobular necrosis&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+##  $ x_4                    : logi  NA NA NA NA NA NA ...</code></pre>
+<pre class="r"><code>head(av4)</code></pre>
+<pre><code>##            id date_of_death cardiac_non_cardiac_y_n  x
+## 1 26601040001      7/6/1983                      N  NA
+## 2 27106250002      9/6/1984                       Y NA
+## 3 27409010001     3/17/1989                       Y NA
+## 4 28008300003      8/7/1993                       Y NA
+## 5 28408040002     8/26/1993                       Y NA
+## 6 28701230009    11/13/1997                       Y NA
+##                                             cause_of_death_desc x_1
+## 1 acute diffuse hypoxic encephalopathy with tonsilar herniation  NA
+## 2                                      Congestive heart failure  NA
+## 3                                        cardiopulmonary arrest  NA
+## 4                                massive mediastinal hemorrhage  NA
+## 5                                     cardiorespiratory failure  NA
+## 6                                        Dilated Cardiomyopathy  NA
+##                             ea_desc_1 x_2
+## 1 acute  hemorrhagic bronchopneumonia  NA
+## 2                                      NA
+## 3                                      NA
+## 4                                      NA
+## 5                              sepsis  NA
+## 6                     rheumatic fever  NA
+##                           ea_desc_2 x_3
+## 1 complex congenital heart disease   NA
+## 2                                    NA
+## 3                                    NA
+## 4                                    NA
+## 5                                    NA
+## 6                                    NA
+##                                           ea_desc_3 x_4
+## 1 shock liver with extensive centrilobular necrosis  NA
+## 2                                                    NA
+## 3                                                    NA
+## 4                                                    NA
+## 5                                                    NA
+## 6                                                    NA</code></pre>
+<pre class="r"><code>tail(av4)</code></pre>
+<pre><code>##             id date_of_death cardiac_non_cardiac_y_n  x
+## 17 29803110009     7/21/2000                       Y NA
+## 18 29810260001     11/3/1998                       Y NA
+## 19 29901180007      4/5/1999                       Y NA
+## 20 29907030002     10/6/1999                       N NA
+## 21 30211120007     3/14/2003                       Y NA
+## 22 30301010005     1/17/2003                       Y NA
+##                                          cause_of_death_desc x_1
+## 17                         Sudden decrease in cardiac output  NA
+## 18                                    acute cardiac failure   NA
+## 19                                    acute cardiac failure   NA
+## 20 diffuse cerebral atrophy, hypoxic ischemic encephalopathy  NA
+## 21                                               hypotension  NA
+## 22                                    cyanotic Heart Disease  NA
+##              ea_desc_1 x_2 ea_desc_2 x_3 ea_desc_3 x_4
+## 17                      NA            NA            NA
+## 18                      NA            NA            NA
+## 19                      NA            NA            NA
+## 20          bacteremia  NA            NA            NA
+## 21 respiratory failure  NA            NA            NA
+## 22                      NA            NA            NA</code></pre>
 <pre class="r"><code>isolate_month &lt;- function(v) {
   v                                             %&gt;%
     gsub(&quot;/.*&quot;, &quot;&quot;, .)                          %&gt;%
@@ -1604,11 +1631,6 @@ for (a in alist1) {
 ## 
 ## date_of_death
 ## 
-## Special cases.
-##     Sum 
-##  22  22 
-## 
-## 
 ## Month.
 ##    1    2    3    4    5    6    7    8    9   10   11   12 &lt;NA&gt;  Sum 
 ##   24   19   28   28   22   24   24   28   26   22   28   22    0  295 
@@ -1630,6 +1652,48 @@ for (a in alist1) {
 ##   15   12   17   11    8    9   12    9   13    8   10    9   11   12   14 
 ## &lt;NA&gt;  Sum 
 ##    0  295</code></pre>
+<pre class="r"><code>{
+  cat(&quot;\n\n&quot;)
+  cat(&quot;date_of_death&quot;)
+  examine_dates(av4$date_of_death)
+}</code></pre>
+<pre><code>## 
+## 
+## date_of_death
+## 
+## Month.
+##    1    3    4    6    7    8    9   10   11   12 &lt;NA&gt;  Sum 
+##    1    2    3    3    3    4    1    1    3    1    0   22 
+## 
+## 
+## Day.
+##    1    2    3    5    6    7   12   13   14   17   18   19   21   25   26 
+##    1    1    2    1    4    1    1    2    2    2    1    1    1    1    1 
+## &lt;NA&gt;  Sum 
+##    0   22 
+## 
+## 
+## Year.
+## 1983 1984 1989 1991 1993 1995 1996 1997 1998 1999 2000 2001 2003 &lt;NA&gt;  Sum 
+##    1    1    1    2    4    1    2    3    1    2    1    1    2    0   22</code></pre>
+<pre class="r"><code>print(length(unique(av1$id)))</code></pre>
+<pre><code>## [1] 1202</code></pre>
+<pre class="r"><code>print(dim(av1)[1])</code></pre>
+<pre><code>## [1] 1202</code></pre>
+<pre class="r"><code>print(length(unique(av3$id)))</code></pre>
+<pre><code>## [1] 295</code></pre>
+<pre class="r"><code>print(dim(av3)[1])</code></pre>
+<pre><code>## [1] 295</code></pre>
+<pre class="r"><code>print(length(unique(av4$id)))</code></pre>
+<pre><code>## [1] 22</code></pre>
+<pre class="r"><code>print(dim(av4)[1])</code></pre>
+<pre><code>## [1] 22</code></pre>
+<pre class="r"><code>print(length(intersect(av1$id, av3$id)))</code></pre>
+<pre><code>## [1] 208</code></pre>
+<pre class="r"><code>print(length(intersect(av1$id, av4$id)))</code></pre>
+<pre><code>## [1] 22</code></pre>
+<pre class="r"><code>print(length(intersect(av3$id, av4$id)))</code></pre>
+<pre><code>## [1] 0</code></pre>
 
 
 

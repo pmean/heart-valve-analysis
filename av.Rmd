@@ -16,14 +16,30 @@ library(survival)
 ```{r read-data}
 av1 <- read.csv("aorta1.csv", as.is=TRUE)
 av3 <- read.csv("aorta3.csv", as.is=TRUE)
+av4 <- read.csv("aorta4.csv", as.is=TRUE)
+
+print(names(av1)[1])
+names(av1)[1] <- "id"
+print(names(av3)[1])
+names(av3)[1] <- "id"
+print(names(av4)[1])
+names(av4)[1] <- "id"
+
 names(av1) %<>% tolower
 names(av3) %<>% tolower
+names(av4) %<>% tolower
+
 names(av1) %<>% gsub("\\.", "_", .)
 names(av3) %<>% gsub("\\.", "_", .)
+names(av4) %<>% gsub("\\.", "_", .)
+
 names(av1) %<>% gsub("_+",  "_", .)
 names(av3) %<>% gsub("_+",  "_", .)
+names(av4) %<>% gsub("_+",  "_", .)
+
 names(av1) %<>% gsub("_$",  "",  .)
 names(av3) %<>% gsub("_$",  "",  .)
+names(av4) %<>% gsub("_$",  "",  .)
 ```
 
 AORTIC
@@ -63,13 +79,47 @@ AORTIC
 
 
 ```{r peek}
-i1 <- which(names(av1)=="x")
-i2 <- dim(av1)[2]
-for (i in i1:i2) {
-  print(table(av1[, i], useNA="always"))
+j1 <- which(grepl("^x",names(av1)))
+print(names(av1)[j1])
+j1 <- j1[-1]
+j3 <- which(grepl("^x",names(av3)))
+print(j3)
+j4 <- which(grepl("^x",names(av4)))
+print(names(av4)[j4])
+
+for (j in names(av1)[j1]) {
+  x <- av1[, j]
+  n <- length(x)
+  is_empty <- is.na(x) | grepl("^[[:space:]]+$", x)
+  if (sum(is_empty)==n) {next}
+  cat("\n\n")
+  cat(j)
+  cat("\n")
+  print(table(x[!is_empty]))
 }
-j <- which(is.na(av1$i_patient_id))
-av1 <- av1[, 1:(i1-1)]
+
+i1 <- which(is.na(av1$id))
+print(i1)
+i3 <- which(is.na(av3$id))
+print(i3)
+i4 <- which(is.na(av4$id))
+print(i4)
+
+for (j in names(av3)) {
+  x <- av3[i3, j]
+  n <- length(x)
+  is_empty <- is.na(x) | x=="" | grepl("^[[:space:]]+$", x)
+  if (sum(is_empty)==n) {next}
+  cat("\n\n")
+  cat(j)
+  cat(": ")
+  cat(i3[!is_empty])
+  print(table(x[!is_empty]))
+}
+
+av1 <- av1[, -j1]
+
+av3 <- av3[-i3, ]
 
 str(av1)
 head(av1)
@@ -78,6 +128,10 @@ tail(av1)
 str(av3)
 head(av3)
 tail(av3)
+
+str(av4)
+head(av4)
+tail(av4)
 ```
 
 ```{r examine-dates}
@@ -165,6 +219,30 @@ for (a in alist1) {
   cat("date_of_death")
   examine_dates(av3$date_of_death)
 }
+{
+  cat("\n\n")
+  cat("date_of_death")
+  examine_dates(av4$date_of_death)
+}
+```
+
+```{r merge-everything}
+print(length(unique(av1$id)))
+print(dim(av1)[1])
+print(length(unique(av3$id)))
+print(dim(av3)[1])
+print(length(unique(av4$id)))
+print(dim(av4)[1])
+
+print(length(intersect(av1$id, av3$id)))
+print(length(intersect(av1$id, av4$id)))
+print(length(intersect(av3$id, av4$id)))
+print(setdiff(av3$id, av1$id))
+
+av1                                             %>%
+  select(id, ndi_date_of_death)                 %>%
+  inner_join(av3)                               %>%
+  mutate(n=(ndi_date_of_death==date))
 ```
 
 ```{r save-everything, echo=FALSE}
