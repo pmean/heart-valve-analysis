@@ -1,0 +1,87 @@
+---
+title: "Survival plots"
+author: "Steve Simon"
+date: "May 30, 2017"
+output: html_document
+---
+
+```{r preliminaries, echo=FALSE}
+library(dplyr)
+library(lubridate)
+library(magrittr)
+library(survival)
+load("av.RData")
+load("mv.RData")
+```
+
+```{r kaplan-meier-overall}
+plot(survfit(mv_su~1))
+title("Overall survival for mitral valve replacement patients")
+plot(survfit(av_su~1))
+title("Overall survival for aortic valve replacement patients")
+```
+
+```{r ross_bio_mech}
+tb <- table(av1x$ross_bio_mech)
+print(tb)
+f1 <- survfit(av_su~av1x$ross_bio_mech)
+end_points <- cumsum(f1$strata)
+plot(f1, xlim=c(0, 48))
+text(f1$time[end_points]+1, f1$surv[end_points], names(tb), adj=0)
+title("Aortic valve replacement survival by replacement type")
+tb <- table(av1x$ross_bio_mech[av1x$ross_bio_mech!="999"])
+print(tb)
+f2 <- survfit(av_su~ross_bio_mech, data=av1x, subset=ross_bio_mech!="999")
+end_points <- cumsum(f2$strata)
+plot(f2, xlim=c(0, 48))
+text(f2$time[end_points]+1, f2$surv[end_points], names(tb), adj=0)
+title("Aortic valve replacement survival by replacement type")
+```
+
+```{r era-mv}
+yr <- isolate_year(mv1x$date_of_valve_replacement_recode)
+table(yr)
+yr <- ifelse(nchar(yr)==2, paste0("19", yr), yr)
+yr[yr=="1902"] <- "2002"
+table(yr)
+era <- 
+  1*((yr>="1974")&(yr<="1989")) +
+  2*((yr>="1990")&(yr<="2003")) +
+  3*(yr>="2004")
+table(era)
+era <- factor(era, labels=c("1974-1989", "1990-2003", "2004-2010"))
+table(yr, era)
+f3 <- survfit(mv_su~era, data=mv1x)
+tb <- table(era)
+print(tb)
+end_points <- cumsum(f3$strata)
+plot(f3, xlim=c(0, 48))
+text(f3$time[end_points]+1, f3$surv[end_points], names(tb), adj=0)
+title("Mitral valve replacement survival by era")
+```
+
+```{r era-av}
+yr <- isolate_year(av1x$date_of_valve_replacement_recode)
+table(yr)
+yr <- ifelse(nchar(yr)==2, paste0("19", yr), yr)
+yr[yr=="1902"] <- "2002"
+table(yr)
+era <- 
+  1*((yr>="1976")&(yr<="1989")) +
+  2*((yr>="1990")&(yr<="2003")) +
+  3*(yr>="2004")
+era <- factor(era, labels=c("1976-1989", "1990-2003", "2004-2010"))
+table(yr, era)
+f3 <- survfit(av_su~era, data=av1x)
+tb <- table(era)
+print(tb)
+end_points <- cumsum(f3$strata)
+plot(f3, xlim=c(0, 48))
+text(f3$time[end_points]+1, f3$surv[end_points], names(tb), adj=0)
+title("Aortic valve replacement survival by era")
+```
+
+
+```{r save-everything, echo=FALSE}
+save.image("splots.RData")
+```

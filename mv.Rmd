@@ -77,41 +77,6 @@ MITRAL
 
 9.	Redo stuff – we may not have time for this before abstract deadline
  
-AORTIC
- 
-1.	Arithmetic data for columns where possible – mean, median, SD, range
-
-2.	What is the long-term survival of children with AVR?
-
-3.	Head to head comparison of Ross versus Bio prosthesis versus Mechanical prosthesis looking at survival within the 3 groups and relation to following
- 
-* Age at 1st AVR
-* Weight at 1st AVR
-* Valve type at 1st AVR
-* Valve size at 1st AVR
-* Underlying disease
-* Underlying hemodynamic mechanism – AR versus AS versus both
-* Perfusion time
-* Concomitant prosthetic MVR
-* Initial Hospital length of stay
-* Era effect - < 1990 versus 1990s and up to 2003
-* Geography – State 
-* Institution
-
-4.	Causes of death – Big piles only
-
-5.	Early deaths (PCCC) versus late deaths (NDI) – compare profiles
-
-6.	Interactions
-
-7.	Confounders – collinearity
-
-8.	Kaplan Meir – Ross versus Bio versus Mechanical AVR
-
-9.	Competing risk – will think thru this some more
-
-10.	Redo stuff – we may not have time for this before abstract deadline
-
 
 ```{r peek}
 i1 <- which(names(mv1)=="x")
@@ -338,10 +303,8 @@ c2 <- as.numeric(d2-d0) / 365.25
 censor <- as.numeric(is.finite(c1))
 table(censor)
 c1[censor==0] <- c2[censor==0]
-su <- Surv(time=round(c1, 4), event=censor)
-su
-plot(survfit(su~1))
-plot(survfit(su~mv1x$mechanical_valve_used_y_n))
+mv_su <- Surv(time=round(c1, 4), event=censor)
+plot(survfit(mv_su~1))
 ```
 
 ```{r save-everything, echo=FALSE}

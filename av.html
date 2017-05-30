@@ -170,20 +170,20 @@ names(av4) %&lt;&gt;% gsub(&quot;_$&quot;,  &quot;&quot;,  .)</code></pre>
 <ol style="list-style-type: decimal">
 <li><p>Arithmetic data for columns where possible – mean, median, SD, range</p></li>
 <li><p>What is the long-term survival of children with AVR?</p></li>
-<li><p>Head to head comparison of Ross versus Bio prosthesis versus Mechanical prosthesis looking at survival within the 3 groups and relation to following</p></li>
+<li><p>Head to head comparison of Ross versus Bio prosthesis versus Mechanical prosthesis looking at survival within the 3 groups ==&gt; ross_bio_mech and relation to following</p></li>
 </ol>
 <ul>
-<li>Age at 1st AVR</li>
-<li>Weight at 1st AVR</li>
-<li>Valve type at 1st AVR</li>
-<li>Valve size at 1st AVR</li>
-<li>Underlying disease</li>
-<li>Underlying hemodynamic mechanism – AR versus AS versus both</li>
-<li>Perfusion time</li>
-<li>Concomitant prosthetic MVR</li>
-<li>Initial Hospital length of stay</li>
-<li>Era effect - &lt; 1990 versus 1990s and up to 2003</li>
-<li>Geography – State</li>
+<li>Age at 1st AVR ==&gt; date_of_valve_replacement MINUS birthdate</li>
+<li>Weight at 1st AVR ==&gt; weight_at_surgery_kg</li>
+<li>Valve type at 1st AVR ==&gt; mechanical_valve_used_y_n AND valve_make</li>
+<li>Valve size at 1st AVR ==&gt; valve_size_mm</li>
+<li>Underlying disease ==&gt; underlying_disease_ex_cavc_etc</li>
+<li>Underlying hemodynamic mechanism – AR versus AS versus both ==&gt; underlying_lesion_regurgitation_or_stenosis</li>
+<li>Perfusion time ==&gt; cpb_time_minutes</li>
+<li>Concomitant prosthetic MVR ==&gt; additional_valve_replaced_mitral_pulm_tri</li>
+<li>Initial Hospital length of stay ==&gt; discharge_date MINUS date_of_valve_replacement</li>
+<li>Era effect - &lt; 1990 versus 1990s and up to 2003 ==&gt; date_of_valve_replacement</li>
+<li>Geography – State ==&gt; state</li>
 <li>Institution</li>
 </ul>
 <ol start="4" style="list-style-type: decimal">
@@ -1694,6 +1694,152 @@ for (a in alist1) {
 <pre><code>## [1] 22</code></pre>
 <pre class="r"><code>print(length(intersect(av3$id, av4$id)))</code></pre>
 <pre><code>## [1] 0</code></pre>
+<pre class="r"><code>print(setdiff(av3$id, av1$id))</code></pre>
+<pre><code>##  [1] 22006190000 22107130000 22206220000 22906030000 22907040000
+##  [6] 23306080000 23406110000 23511080000 23511130000 24208200000
+## [11] 24301040000 24309020000 24512240000 24707190000 24805020000
+## [16] 25009120000 25011060000 25211180000 25304270000 25508220001
+## [21] 25603280000 25605110000 25607170000 25712240000 26105040000
+## [26] 26107210000 26109270000 26201060000 26206150001 26206200000
+## [31] 26208080000 26208190000 26311160000 26406110002 26407200000
+## [36] 26504020001 26505010000 26509070000 26601060002 26602080000
+## [41] 26603290000 26607160001 26703130000 26708240000 26801030001
+## [46] 26801260001 26806240002 26902010004 26907220003 27002010002
+## [51] 27002240003 27007290004 27011250000 27109140001 27203080002
+## [56] 27210300002 27211250001 27312120003 27401230002 27406270003
+## [61] 27409230006 27411010002 27508010000 27511300003 27512280000
+## [66] 27603200003 27610140001 27703100003 27710250005 27802210001
+## [71] 27806200000 27809260006 27810020001 27812180002 27902090004
+## [76] 27904020004 27904210007 27906060000 27907050003 27909130008
+## [81] 28004060001 28006020006 28007230005 28011060006 28107110003
+## [86] 28110180003 28411070006</code></pre>
+<pre class="r"><code>av1                                             %&gt;%
+  select(id, ndi_date_of_death)                 %&gt;%
+  inner_join(av3)                               %&gt;%
+  mutate(n=(ndi_date_of_death!=date_of_death))  %&gt;%
+  use_series(n)                                 %&gt;%
+  sum</code></pre>
+<pre><code>## Joining, by = &quot;id&quot;</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>av1                                             %&gt;%
+  select(id, ndi_date_of_death)                 %&gt;%
+  anti_join(av3)                                %&gt;%
+  use_series(ndi_date_of_death)                 %&gt;%
+  table</code></pre>
+<pre><code>## Joining, by = &quot;id&quot;</code></pre>
+<pre><code>## .
+##     
+## 994</code></pre>
+<pre class="r"><code>fix_list1 &lt;- &quot;date_of_valve_replacement&quot;
+for (d in fix_list1) {
+  v &lt;- av1[, d]
+  double_delimiter &lt;-  grepl(&quot;[-/].*[-/]&quot;, v)
+  single_delimiter &lt;-  grepl(&quot;[-/]&quot;, v) &amp; ! double_delimiter
+  absent_delimiter &lt;- !grepl(&quot;[-/]&quot;, v)
+  year_only &lt;- absent_delimiter &amp; as.numeric(v) %in% as.character(1950:2020)
+  missing_code &lt;- absent_delimiter &amp; !year_only
+  double_00 &lt;- grepl(&quot;00/00&quot;, v) | grepl(&quot;^0/00&quot;, v)
+  v &lt;- sub(&quot;^0/00&quot;, &quot;00/00&quot;, v)
+  single_00 &lt;- grepl(&quot;/00/&quot;,  v) &amp; !double_00 
+  cat(&quot;\n\nMissing code\n&quot;)
+  v[missing_code] %&gt;% unique %&gt;% sort %&gt;% print
+  cat(&quot;\n\nYear only\n&quot;)
+  v[year_only]        %&gt;% unique %&gt;% sort %&gt;% print
+  cat(&quot;\n\nSingle delimiter\n&quot;)
+  v[single_delimiter] %&gt;% unique %&gt;% sort %&gt;% print
+  cat(&quot;\n\nDouble 00\n&quot;)
+  v[double_00]        %&gt;% unique %&gt;% sort %&gt;% print
+  cat(&quot;\n\nSingle 00\n&quot;)
+  v[single_00]        %&gt;% unique %&gt;% sort %&gt;% print
+  cat(&quot;\n\n&quot;)
+
+  w &lt;- v
+  w[year_only] &lt;- paste0(&quot;06/30/&quot;, v[year_only])
+  w[single_delimiter] &lt;- sub(&quot;/&quot;, &quot;/15/&quot;, v[single_delimiter])
+  w[single_00] &lt;- sub(&quot;/00/&quot;, &quot;/15/&quot;, v[single_00])
+  w[double_00] &lt;- sub(&quot;^0/00&quot;, &quot;06/30&quot;, v[double_00])
+  w[double_00] &lt;- sub(&quot;00/00&quot;, &quot;06/30&quot;, v[double_00])
+  print(data.frame(changes=paste(v, &quot;changes to&quot;, w)[v!=w]))
+  av1$date_of_valve_replacement_recode &lt;- w
+}</code></pre>
+<pre><code>## Warning in match(x, table, nomatch = 0L): NAs introduced by coercion</code></pre>
+<pre><code>## 
+## 
+## Missing code
+## [1] &quot;888&quot;    &quot;999&quot;    &quot;999.00&quot;
+## 
+## 
+## Year only
+## character(0)
+## 
+## 
+## Single delimiter
+## character(0)
+## 
+## 
+## Double 00
+##  [1] &quot;00/00/1976&quot; &quot;00/00/1980&quot; &quot;00/00/1982&quot; &quot;00/00/1983&quot; &quot;00/00/1987&quot;
+##  [6] &quot;00/00/1988&quot; &quot;00/00/1989&quot; &quot;00/00/1990&quot; &quot;00/00/1992&quot; &quot;00/00/1994&quot;
+## [11] &quot;00/00/1996&quot; &quot;00/00/91&quot;   &quot;00/00/95&quot;  
+## 
+## 
+## Single 00
+##  [1] &quot;04/00/1992&quot; &quot;05/00/90&quot;   &quot;07/00/95&quot;   &quot;09/00/1988&quot; &quot;1/00/02&quot;   
+##  [6] &quot;11/00/2000&quot; &quot;11/00/81&quot;   &quot;5/00/1994&quot;  &quot;7/00/1984&quot;  &quot;7/00/83&quot;   
+## [11] &quot;8/00/87&quot;    &quot;8/00/92&quot;   
+## 
+## 
+##                             changes
+## 1  00/00/1996 changes to 06/30/1996
+## 2        8/00/87 changes to 8/15/87
+## 3      00/00/95 changes to 06/30/95
+## 4  00/00/1987 changes to 06/30/1987
+## 5  09/00/1988 changes to 09/15/1988
+## 6  00/00/1989 changes to 06/30/1989
+## 7        7/00/83 changes to 7/15/83
+## 8  00/00/1982 changes to 06/30/1982
+## 9  00/00/1980 changes to 06/30/1980
+## 10     07/00/95 changes to 07/15/95
+## 11 00/00/1994 changes to 06/30/1994
+## 12 00/00/1976 changes to 06/30/1976
+## 13       8/00/92 changes to 8/15/92
+## 14 00/00/1990 changes to 06/30/1990
+## 15 11/00/2000 changes to 11/15/2000
+## 16   5/00/1994 changes to 5/15/1994
+## 17 00/00/1992 changes to 06/30/1992
+## 18     00/00/91 changes to 06/30/91
+## 19   7/00/1984 changes to 7/15/1984
+## 20     11/00/81 changes to 11/15/81
+## 21 00/00/1983 changes to 06/30/1983
+## 22       1/00/02 changes to 1/15/02
+## 23 04/00/1992 changes to 04/15/1992
+## 24     05/00/90 changes to 05/15/90
+## 25 00/00/1988 changes to 06/30/1988</code></pre>
+<pre class="r"><code># Check for dates that will not convert.
+m_codes &lt;- av1$date_of_valve_replacement_recode %in% c(&quot;888&quot;, &quot;999&quot;, &quot;999.00&quot;)
+sum(m_codes)</code></pre>
+<pre><code>## [1] 33</code></pre>
+<pre class="r"><code>av1 %&gt;% filter(!m_codes) -&gt; av1x
+dim(av1x)</code></pre>
+<pre><code>## [1] 1169   68</code></pre>
+<pre class="r"><code>d0 &lt;- mdy(av1x$date_of_valve_replacement_recode) - mdy(&quot;1/1/1950&quot;)
+d1 &lt;- mdy(av1x$ndi_date_of_death)                - mdy(&quot;1/1/1950&quot;)
+d2 &lt;- rep(mdy(&quot;12/30/2014&quot;)-mdy(&quot;1/1/1950&quot;), dim(av1x)[1])
+sum(is.na(d0))</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>sum(is.na(d1))</code></pre>
+<pre><code>## [1] 967</code></pre>
+<pre class="r"><code>c1 &lt;- as.numeric(d1-d0) / 365.25
+c2 &lt;- as.numeric(d2-d0) / 365.25
+censor &lt;- as.numeric(is.finite(c1))
+table(censor)</code></pre>
+<pre><code>## censor
+##   0   1 
+## 967 202</code></pre>
+<pre class="r"><code>c1[censor==0] &lt;- c2[censor==0]
+av_su &lt;- Surv(time=round(c1, 4), event=censor)
+plot(survfit(av_su~1))</code></pre>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABUAAAAPACAMAAADDuCPrAAAAS1BMVEUAAAAAADoAAGYAOpAAZpAAZrY6AAA6kNtmAABmtv+QOgCQkDqQ29uQ2/+2ZgC2/7a2///bkDrbtmbb////tmb/25D//7b//9v////Es+8jAAAACXBIWXMAAB2HAAAdhwGP5fFlAAAdoklEQVR4nO3di3bayqKmUZKcOJfToRcdnPD+T9rcDBIiNvopIRWac4w9VsgOslwWn6tAiMUGgMhi7B0AqJWAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCA07YAuAIopn6jiWyxo7NEGnkvxRpXe4IXlac+/9r/zAL8wgNmqLKCri/r3baiAAuVUFdDXl878+fN/vbYgoEA5NQX07892Mf98397+8rvPJgQUKKemgK47udwl9UefTQgoUE5NAV12F+zbSWivp0EFFCinooBup5vfOn+56reGF1CgnIoCup1tdpfr634vIwkoUI6AAoQqCqglPDAtFQXUi0jAtNQU0OunMXVnpe8QUKCcmgJ69UT6fm9FElCgnJoCeihm26dfvbYgoEA5VQW0eSkmFxMBxlZZQDcuZwdMRn0BvYuAAuUIKEBIQAFCAgoQqjygry/vnQj6iI+AAuZLQAFCTx3QLgEFyqk8oH0JKFCOgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUIBQRQG98oEei74fiiSgQDkCChCqKKC7N74LKDAdNQV0Pwft9THwHQIKlFNVQHcF7fk5xhdczw4op66A7lbxX37fcX8BBcqpLKCb1WLx4467CyhQTm0B3S7i75mCuiY9UE5tAb1zCiqgQDnVBfQ+PhYJKEdAAULzC+jYuwA8DQEFCM01oJPeS6AO8wvo4u2/k95RoAJzDqiEAneZYUAX5z+OuzNA5eYb0Iu/lFOgr9kFtPtC/EJAgYiAdv6FnAK3mV1APyroZUAve6qswJv5BbTfBPOjngIzNsOA3hdBPQXezDCgi01zJnpX/T5e74srPLGZBnRTrKGdrb/X0zJfBpiI2QW08x0Xz2h38xdfaYgvA4xAQDcXk9Hh9v/q/HSwrwYMbn4Bfef/6xp0V648XyqoUBMB7fyLqwbbH+t7qNdcA3pTqv4R00FX+a2vPNjXAUqYaUB7BuqfJR0qq+ajUIOZBvSuUzRvy+n9+Vtc5H7SIwtzNNuAblrr+SKbHmxiKqAwTXMO6PkvB+lT6Zb2e/4WGJ6AboZ9yab8Av/y/noKYxHQzr8YLKfFMtq6p8U9jEZAO/+iXbYBzwAtFVQJhZEI6Ed3GHS9XGaBfzkf1VN4DAH96A7d9fKAfbp3OnrXMwNATwLaewuP6GmhEEopDEpA79ra+/PTu89buu+5Uet5GJiAltx46fX+fU+NnraQ7wDwHgEd9KuV6undk9HNxH8wUCUBfdyXvujpPdu44/Wlxu1gD4AGAR3J3SHsOyct/vwCIKAjua9n9z41et5Gck/gQEAnobO+77OfBUp4ZX2vrvAhAZ2invUKF/VXNnBxu99WYHYEdJJ69+vuhl7d5sW2794iPBkBnaj2fDC4c7nqXZ2f3r9ZqJ+ATt6dq/LitbvyfGnR7UM9BLQC7flfcNfyP+TO86WlvwLUQEArE+Rq6MIJKLMloJXprp8/rtfwLwJ5/Z55EtAKBevnK6/SDxG6obYL0ySg9bvxm/pXQwccEynlyQlo/fJvauCamo7y7AT0eYS9+vfMtNQ5pOc/379BmBIBfRpFsjfgGt98lOcjoE+qQPyKp1RAeTYC+qRKL8NLT0rNR3kGAsrtyj1XennXyy3JK1UQUAKlZ6Qf9RSmSUBnYOAaDVY777dn6gR0Bv6xPi44FsWeGn1364NsHO4goHPRXR8Pc5W7Uqv6K1+g8AbhbgI6ewVTN2xBT19jkO1CQEDnbqjaDTcRtZ5nMgSUZpA62csHbKjpqIAyHQJK02Xv7s7fwIt6P1BGJaC8p1RPB6qoySjjElBud2cDFZRnI6DEoiBePDV6/w+k4PMN0JOAkgobeFnQ9zxifyAnoBQSDW3RghbYH+hFQCljgMnfnfPRovsC1wgoZQyxfL5nQmo5zwMIKOWcgjVEvHoWsf3PLwvs6VKKEFAGMEyf8o1eTmH/dbvx7+/eW+ZAQBlIs09FN1q+zdd6WnL7PC0BZXBFmzdIQa9/lcsv+a/bzFe1AV3vjuCvfe/loB/DAMEZul+3rPedv09tAV1tj9PP/202f38eD9of/e7vKB9fTRPRuvaEx6sqoMdsfvq1WZ6O2n4FdZSPrlRtzs+GTutnOsmdYihVBfQtm1/+3/Z/vzf7CeluPno7x/XoLp9PLLK16RRrYrvDwGoK6PqQzdeX7eH57fRXvaagjutpKHl+5qKt7I7ea5p7RTE1BXR5mHbuCnqady77vZDkSJ6Y216f6bGhadVqgrtEURUF9O/P47xz+4dTNVfHqN7IkVyV/vkRLB6qooD++X5crp9Kutmt4Xs9CeqRVaHGfPS2fy6iPIqAUovbsyigPEhFAbWEn7teXZzaNHRCu0I5FQX09CLS+nzyUrOlt3AUV653QD806O629udRX4kHqimgx9OY9m/idBrTzN32g5xUQB17T6imgJ7ev3k6kX7tRPqZKpWjx4VVQJ9STQHdvYy08+nXKaXeyjlTpRJ360K/QGUfOd3lUaoK6PliIseUupjIbA28/BZQblJZQM92KXU5uxmbQI/SHegfX6aq2oBmHLbPJ5kNlv3KPWeko+0v5QkolasuoMf7DrdfPI6A8hSa1x8Zbx9uD+rN16P66DajElCeyph5SWakl/+0723GVXlAm1e26+oe0I675zedH/NEdoMBCSjPZyI/5uEPu97r/4H2Y76eOqBdE3lkMQuDB7T/+n+Y/ZixygPalyNoTiaz4pjIbkxmP56IgPKsblvfPmxPHvGFPtBvvc8NBJQndsP69tG7MaZe631uIaDM2cPmX46851RfQJen35S93wnvMObCv+ZfxQ8UM7vnVFlAV4u2vg11FHOT254/7fXWzaoOvRu//6e9fbOqAvr6srjU73rKAsptLh5Qi3/c7rXFwrs4pH99v3O53Weket/loy2W3uDJ/jLKjWLuLwra6zPl6jqKmbieAXXsPaGaArru5HKXVJ+JxMhumr4I6FOqKaDL7oJ9Own1qZyM68b1n2PvGVUU0NPnwjf5XHgqkT3HxrRVFNDtbLO7XF97LzyT8s/pqIA+IwGFgt5dzzv8nk5FAbWEp3KLprF3hhIqCqgXkajNv043FNBnUVNAr5/G1J2VvsNhywO9E0tH4nOoKaBXT6Tv91Ykhy3T4Eh8DjUF9FDMtk+/em3BYcs0dI7kyNjfBVUFtHkppgMXE6FOAvocKgvoxuXsqNIQR56jeXz1BfQuDjnGIaDPSUDhAQT0OQkoPMAQT1h60nR8AgoPIKDPSUDhEaZw6E1hH56MgMIjTOHQm8I+PBkBhUeYwqE3hX14MgIKc+HwL05AYS4c/sUJKMyFw784AYWHGfnwc7pTcQIKjzL24SegxQkoPEoth18t+zkBAgqPUsvhV8t+ToCAwqPUsjquYienQUDhURoBnfSROOmdmxYBhRFM+kic9M5Ni4DCCCZ9JE5656ZFQGEE7bOFLs8e6nu7+M4NtOHnI6AwglYAL0+/7Hu7/M4NtOHnI6BAm4fJzQQUaPMwuZmAAm23v+XzWfUYquKDX3qDJQkofGjsfI2vx1AVH/zSGyxJQIFyBBQgJKBQrcsV54e3H72DT09AoVaXT9l9fHuEnXxuAgpz4fAvTkBhLhz+xQkozIXDvzgBhblw+BcnoDAXDv/iBBTmwuFfnIDCXDj8ixNQgJCAAoQEFObllvd/jrNnFRJQmJWb3v851s5VR0CBNg+Tmwko0OZhcjMBBdo8TG4moECbh8nNBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAJtHiY3E1CgzcPkZgIKtHmY3ExAgTYPk5sJKNDmYXIzAQXaPExuJqBAm4fJzQQUaHv/85LmdPtDAgq0vf95STO63WOoipl0ogQUKEdAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUKVBfTP98//7f+w2r3f6tOvvvcXUKCcugK6XCz2AV2/vWX1mNObCShQTlUBXR5nnad+9p6ECihQTk0BfX1ZLL5uduv449Tz78++c1ABBcqpKaDbCeiP3X9Xh47ubOei3/psQkCBcioK6Ha++fX43/O0c7n48rvHNgQUKKeigG5X7j+O/z1Hc9VvDS+gQDl1BvTr6S/XAgqMpaKAbpfu347/FVBgAioK6GZ5DOeytYT3HCgwkpoCuj6e9fn6cljLb86z0lsJKFBOTQHdnfa5n4OeXzla9jyTXkCBcmoK6P5M+v2S/djN3TuSek1ABRQoqKqAHgra8vXjOzUJKFBOXQE9vB2+4cfH92gRUKCc2gJ6eCf8Qa/X3w8EFCinvoDeRUCBcgQUICSgACEBBQhVHtDXl/feC395ztPOA3cOeHICChB66oB2CShQTuUB7UtAgXIEFCAkoAAhAQUI1RfQ8+VEel6JaUdAgXIqC+jqvqvZCShQUFUB7V4OtN9JTAIKlFRTQHcf6dEs5v7Cdv2uaSegQDk1BXTdyeUuqb2uqSygQDk1BXTZXbBvJ6G9ngYVUKCcigJ69SOMfS48MJqKArqdbXaX62vvhQfGIqAAoYoCagkPTEtFAfUiEjAtNQX0+mlM3VnpOwQUKKemgF49kb7fW5EEFCinpoAeitn26VevLQgoUE5VAW1eisnFRICxVRbQjcvZAZNRX0DvIqBAOQIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCBUb0D/fF98630nAQXKEVCAkIAChCoK6LaY13z+r8/OCShQjIAChCoK6GYtoMCU1BTQ/Rz0y+/zDc+BAmOqKqCbzXKx+PTr8EcBBUZWWUA3ry+LYzcFFBhZbQHd/P15XMYLKDCy6gK62awWi8UPAQVGV2FA98v4rwIKjK3GgO6X8Z//r4AC46oyoIdl/EJAgVFVGtD9Ml5AgVHVGtD9KaECCoyp3oBGBBQoR0ABQgIKEBJQgFDlAX19ee9ydteufvfAnQOenIAChJ46oF0CCpRTeUD7ElCgHAEFCAkoQEhAAUL1BXR5ekH9a/87CyhQTmUBXV2clNS3oQIKlFNVQPfXsLvjU+EFFCippoDuLkTfLObuY+LPnxN/EwEFyqkpoOtOLndJ/dFnEwIKlFNTQJfdBft2EtrraVABBcqpKKDb6Wb3EvSrfmt4AQXKqSig29lmd7m+9l54YCwCChCqKKCW8MC0VBRQLyIB01JTQK+fxtTrs40FFCinpoBePZG+31uRBBQop6aAHorZ9ulXry0IKFBOVQFtXorJxUSAsVUW0I3L2QGTUV9A7yKgQDkCChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCFUW0NeXxWLx5ffp9t+fi8//9bi/gALl1BXQ5eLg69tfCCgwnqoC+tbP8yRUQIHx1BTQ3fr9x/a/q3NBBRQYT00BXS4+/dr/YZvNY0EFFBhPRQHdxvL03OfyWFABBcZTUUD/fN8v4A+OBRVQYDy1BnRX0K8CCoyp2oDungf9JqDAiCoKaPM50MPNxQ8BBcZTUUB3py81pqC7s5o+/R8BBUZTU0B354F+a9xe78+pF1BgJDUFdH8GfXMZvxZQYERVBXRf0OYcdDcnFVBgJHUFdPfK0bfWX6wEFBhLZQG9l4AC5QgoQEhAAUICChCqPKCvL++9iLS44oE7Bzw5AQUIPXVAuwQUKKfygPYloEA5AgoQElCAkIAChOoL6PnD4b9+/I8vCShQTmUBXV2clNS3oQIKlFNVQHdXr7vQ6yQmAQVKqimgu09Bahbzz/fF8ePhbyagQDk1BXTdyeX+g+X6bEJAgXJqCuiyu2DfTkJ7PQ0qoEA5FQW0czX6nVW/NbyAAuVUFNDtbLO7XF97LzwwFgEFCFUUUEt4YFoqCqgXkYBpqSmg109j6s5K3yGgQDk1BfTqifT93ookoEA5NQX0UMy2T796bUFAgXKqCmjzUkwuJgKMrbKAblzODpiM+gJ6FwEFyhFQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoAAhAQUICShASEABQgIKEBJQgJCAAoQEFCAkoACh+gK6XLz52v/OAgqUU1lAV4u2vg0VUKCcqgL6+rK49Pm/XlsQUKCcmgL692e7mH++b29/+d1nEwIKlFNTQNedXO6S+qPPJgQUKKemgC67C/btJLTX06ACCpRTUUC3081vnb9c9VvDCyhQTkUB3c42u8v1db+XkQQUKEdAAUIVBdQSHpiWigLqRSRgWmoK6PXTmLqz0ncIKFBOTQG9eiJ9v7ciCShQTk0BPRSz7dOvXlsQUKCcqgLavBSTi4kAY6ssoBuXswMmo76A3kVAgXIEFCAkoAAhAQUIVR7Q15f3TgTtnPS0EFCgHAEFCD11QLsEFCin8oD2JaBAOQIKEBJQgJCAAoTqC6j3wgMTUVlAV67GBExGVQF9femc1tnvesoCChRUU0CvXpG+12fKCShQUE0Bvf6ZSN2POn6HgALl1BRQn8oJTEpFAfW58MC0VBTQ7Wyzu1xfey88MBYBBQhVFFBLeGBaKgqoF5GAaakpoNdPY+rOSt8hoEA5NQX06on0/d6KJKBAOTUF9FDMtk+/em1BQIFyqgpo81JMLiYCjK2ygG5czg6YjPoCepdrn9MJkCreqNIbLGnswQaeS/FGld5gSZbwXcaky5hcYVC6BhiTSY+yY6DLmHQZkysMSpeAYky6jMkVBqVLQDEmXcbkCoPSJaAYky5jcoVB6RJQjEmXMbnCoHQJKMaky5hcYVC6BBRj0mVMrjAoXQKKMekyJlcYlC4BxZh0GZMrDEqXgGJMuozJFQalS0AxJl3G5AqD0iWgGJMuY3KFQekSUIxJlzG5wqB0CSjGpMuYXGFQugQUY9JlTK4wKF0CijHpMiZXGJQuAcWYdBmTKwxKl4BiTLqMyRUGpWtuAQWYMgEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQGi6Af3zfbH1bezdmIo/3z//17w198F5fdmNwKdf578xJsdBaQ6BQdnbDsyP042iYzLZgC4XB82HyIz9/bloBHT2g3N4DOycRmX2Y7I7Ro5OsTAoe7vDZaAxmWpAV4vOI2TWls2BmP3gnPt5GoLZj0mjn6daGJSDZeOXSuExmWhAd2uRL783m/X2+/w69s6Mb//YOP28Dc7qbQm2fBsCY3IalN1vl91QGJQ368bvlNJjMtGALt++u+33O/Plx+btqa3mYnXeg9NYka2O4zL7Mdn9kj1+49vhOfzJoOwd1ivHA6b0mEwzoNtv+S0Xq9k/Bb7/+f/P+TlQg7M+Tx52c/MfxmSzD8LboKwOuTAoe7uXD/73LaDFx2SaAW0cDNs/HtYjs7Vbmv1ovIhkcJqH/nL/0DAmTYcxMSgHu18nq7eAFh+TaQa08Qhpv/w8R6vdj7wxDAanablfiBmThrdZlkHZ2Xby2+YU0OJjMtmAvr1odn5qZ9baATU4b7ax2E0jjMnZ6u0JP4Oy2X/n2wOkGdCyYzLNgC5bp23N9Eff0giowWk4ziiMydGycRaTQdk0VigDjclUA3r+1mb7o29pBdTgvHl7HsuYHLUDalDWh1+wq8HGpIaANt6FNVv/DOisB2fbz8OoGJODt5Ppr/xWmeWgHJ/h+VdAC4xJDQGd5+/ONjPQK9ank2ONScPuvLfdS80GZfttHw6Qec9AZ/mjvyCgXed+GpOW45n0BqX72tFMAur1w0tehe9YLs7n8RmTlsNLa7MflPNJn3N7FX7tDLYLjWEwODu7Z/vO72U2Ji2H4Zj9oJyvG3IwxJhMM6DeQ3HJO5HadpcH+Na6aUzODpmY/aBcCehM3onkXbyX/novfNPllSCMyZX3t85+UK4EdCbvhXcdmUvN9YbBOV1v6MSYnE7pOv/RoLw5P/U5j6sxuZLhpWZAZz84x0swNc1+TPaDcjpn5zC3MihvzgGdyfVAXUv7QusZ77kPzrq9Mnt74/esx+TtqrEH5xefZz4oR40X3+dxRXqf5nLBZyKdNT+7ovnGxTmPyc75g05OUyuDcrBqvQW+5JhMNqA+T7Dl4pyLWQ9O8xORzgGd95gcHCahzdeWDcpeM6Az+VROgKkTUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCAkoQEhAAUICChASUICQgAKEBBQgJKAAIQEFCP1/GoABDD/grsAAAAAASUVORK5CYII=" width="672" /></p>
 
 
 

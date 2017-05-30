@@ -48,19 +48,34 @@ AORTIC
 
 2.	What is the long-term survival of children with AVR?
 
-3.	Head to head comparison of Ross versus Bio prosthesis versus Mechanical prosthesis looking at survival within the 3 groups and relation to following
+3.	Head to head comparison of Ross versus Bio prosthesis versus Mechanical prosthesis looking at survival within the 3 groups  ==>
+`r names(av1)[23]` and relation to following
  
-* Age at 1st AVR
-* Weight at 1st AVR
-* Valve type at 1st AVR
-* Valve size at 1st AVR
-* Underlying disease
-* Underlying hemodynamic mechanism – AR versus AS versus both
-* Perfusion time
-* Concomitant prosthetic MVR
-* Initial Hospital length of stay
-* Era effect - < 1990 versus 1990s and up to 2003
-* Geography – State 
+* Age at 1st AVR ==> 
+`r names(av1)[16]` MINUS
+`r names(av1)[ 2]`
+* Weight at 1st AVR ==>
+`r names(av1)[18]`
+* Valve type at 1st AVR ==>
+`r names(av1)[14]` AND 
+`r names(av1)[20]`
+* Valve size at 1st AVR ==>
+`r names(av1)[19]`
+* Underlying disease ==> 
+`r names(av1)[13]`
+* Underlying hemodynamic mechanism – AR versus AS versus both ==> 
+`r names(av1)[15]`
+* Perfusion time ==> 
+`r names(av1)[21]`
+* Concomitant prosthetic MVR ==> 
+`r names(av1)[22]`
+* Initial Hospital length of stay ==> 
+`r names(av1)[17]` MINUS 
+`r names(av1)[16]`
+* Era effect - < 1990 versus 1990s and up to 2003 ==>
+`r names(av1)[16]`
+* Geography – State ==> 
+`r names(av1)[6]`
 * Institution
 
 4.	Causes of death – Big piles only
@@ -242,8 +257,71 @@ print(setdiff(av3$id, av1$id))
 av1                                             %>%
   select(id, ndi_date_of_death)                 %>%
   inner_join(av3)                               %>%
-  mutate(n=(ndi_date_of_death==date))
+  mutate(n=(ndi_date_of_death!=date_of_death))  %>%
+  use_series(n)                                 %>%
+  sum
+av1                                             %>%
+  select(id, ndi_date_of_death)                 %>%
+  anti_join(av3)                                %>%
+  use_series(ndi_date_of_death)                 %>%
+  table
 ```
+
+```{r fix_dates}
+fix_list1 <- "date_of_valve_replacement"
+for (d in fix_list1) {
+  v <- av1[, d]
+  double_delimiter <-  grepl("[-/].*[-/]", v)
+  single_delimiter <-  grepl("[-/]", v) & ! double_delimiter
+  absent_delimiter <- !grepl("[-/]", v)
+  year_only <- absent_delimiter & as.numeric(v) %in% as.character(1950:2020)
+  missing_code <- absent_delimiter & !year_only
+  double_00 <- grepl("00/00", v) | grepl("^0/00", v)
+  v <- sub("^0/00", "00/00", v)
+  single_00 <- grepl("/00/",  v) & !double_00 
+  cat("\n\nMissing code\n")
+  v[missing_code] %>% unique %>% sort %>% print
+  cat("\n\nYear only\n")
+  v[year_only]        %>% unique %>% sort %>% print
+  cat("\n\nSingle delimiter\n")
+  v[single_delimiter] %>% unique %>% sort %>% print
+  cat("\n\nDouble 00\n")
+  v[double_00]        %>% unique %>% sort %>% print
+  cat("\n\nSingle 00\n")
+  v[single_00]        %>% unique %>% sort %>% print
+  cat("\n\n")
+
+  w <- v
+  w[year_only] <- paste0("06/30/", v[year_only])
+  w[single_delimiter] <- sub("/", "/15/", v[single_delimiter])
+  w[single_00] <- sub("/00/", "/15/", v[single_00])
+  w[double_00] <- sub("^0/00", "06/30", v[double_00])
+  w[double_00] <- sub("00/00", "06/30", v[double_00])
+  print(data.frame(changes=paste(v, "changes to", w)[v!=w]))
+  av1$date_of_valve_replacement_recode <- w
+}
+```
+
+```{r kaplan-meier}
+# Check for dates that will not convert.
+m_codes <- av1$date_of_valve_replacement_recode %in% c("888", "999", "999.00")
+sum(m_codes)
+av1 %>% filter(!m_codes) -> av1x
+dim(av1x)
+d0 <- mdy(av1x$date_of_valve_replacement_recode) - mdy("1/1/1950")
+d1 <- mdy(av1x$ndi_date_of_death)                - mdy("1/1/1950")
+d2 <- rep(mdy("12/30/2014")-mdy("1/1/1950"), dim(av1x)[1])
+sum(is.na(d0))
+sum(is.na(d1))
+c1 <- as.numeric(d1-d0) / 365.25
+c2 <- as.numeric(d2-d0) / 365.25
+censor <- as.numeric(is.finite(c1))
+table(censor)
+c1[censor==0] <- c2[censor==0]
+av_su <- Surv(time=round(c1, 4), event=censor)
+plot(survfit(av_su~1))
+```
+
 
 ```{r save-everything, echo=FALSE}
 save.image("av.RData")
