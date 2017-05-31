@@ -106,7 +106,6 @@ AORTIC
 * Institution
 
 4.	Causes of death – Big piles only
-
 5.	Early deaths (PCCC) versus late deaths (NDI) – compare profiles
 
 6.	Interactions
@@ -119,73 +118,92 @@ AORTIC
 
 10.	Redo stuff – we may not have time for this before abstract deadline
 
-```{r kaplan-meier}
-av4                                             %>%
+```{r calculate-dates}
+m_codes <- as.character(995:999)
+
+calculate_days <- function(df, v) {
+  dfname <- deparse(substitute(df))
+  vname <- deparse(substitute(v))
+  t0 <- mdy("1/1/1950") # our overall reference point
+  missing_codes <- df[, vname] %in% m_codes
+  cat("\nThere are ")
+  cat(dim(df)[1]-sum(missing_codes))
+  cat(" valid values out of ")
+  cat(dim(df)[1])
+  cat(" for ")
+  cat(paste(dfname, vname, sep="$"))
+  cat(".\n")
+  days <- mdy(df[, vname])-t0
+  if (sum(is.na(days)>sum(missing_codes))) {
+    cat("\nValues for which conversion was not possible\n")
+    df[is.na(days)&!missing_codes, vname] %>% table %>% print
+  }
+  return(days)
+}
+
+av3                                             %>%
+  bind_rows(av4)                                %>%
+  filter(!(date_of_death %in% m_codes))         %>%
   select(id, date_of_death)                     %>%
-  right_join(av1)                               -> av5
-dim(av1)
-dim(av5)
-valid_initial_date <- is.finite(mdy(av5$date_of_valve_replacement))
-av5 <- av5[valid_initial_date, ]
-dim(av5)
+  right_join(av1)                               -> av5  
+av5[is.na(av5$date_of_death), "date_of_death"] <- 996
 
-d0 <- mdy(av5$date_of_valve_replacement)   - mdy("1/1/1950")
-d1 <- mdy(av5$ndi_date_of_death)           - mdy("1/1/1950")
-d2 <- mdy(av5$date_of_death)               - mdy("1/1/1950")
-d3 <- pmax(d1, d2, na.rm=TRUE)
-d4 <- mdy("12/30/2014")                    - mdy("1/1/1950")
-d5 <- mdy(av5$date_of_valve_replacement_1) - mdy("1/1/1950")
+av5$d_birth <- calculate_days(av5, birthdate)
+av5$d_vr1   <- calculate_days(av5, date_of_valve_replacement)
+av5$d_vr2   <- calculate_days(av5, date_of_valve_replacement_1)
+av5$d_vr3   <- calculate_days(av5, date_of_valve_replacement_2)
+av5$d_dis1  <- calculate_days(av5, discharge_date)
+av5$d_dis2  <- calculate_days(av5, discharge_date_1)
+av5$d_dis3  <- calculate_days(av5, discharge_date_2)
+av5$d_tx    <- calculate_days(av5, unos_tx_date)
+av5$d_death <- calculate_days(av5, date_of_death)
+av5$d_cens  <- mdy("12/30/2014") - mdy("1/1/1950")
 
-table(av5$ndi_date_of_death[is.na(d1)])
-table(av5$date_of_death[is.na(d2)])
-table(is.finite(d1), is.finite(d2))
+mv4                                             %>%
+  filter(!(date_of_death %in% m_codes))         %>%
+  select(id, date_of_death)                     %>%
+  right_join(mv1)                               -> mv5  
+mv5[is.na(mv5$date_of_death), "date_of_death"] <- 996
 
-c3 <- as.numeric(d3-d0) / 365.25
-c4 <- as.numeric(d4-d0) / 365.25
-censor <- as.numeric(is.finite(c3))
-table(censor)
-c3[censor==0] <- c4[censor==0]
-av_su <- Surv(time=round(c3, 4), event=censor)
-plot(survfit(av_su~1))
-
-c5 <- as.numeric(d5-d0) / 365.25
-censor <- as.numeric(is.finite(c5))
-table(censor)
-c5[censor==0] <- c3[censor==0]
-av_su1 <- Surv(time=round(c5, 4), event=censor)
-plot(survfit(av_su1~1))
-
-mv5 <- mv1
-valid_initial_date <- is.finite(mdy(mv5$date_of_valve_replacement))
-mv5 <- mv5[valid_initial_date, ]
-dim(mv5)
-
-d0 <- mdy(mv5$date_of_valve_replacement)   - mdy("1/1/1950")
-d3 <- mdy(mv5$ndi_date_of_death)           - mdy("1/1/1950")
-d4 <- mdy("12/30/2014")                    - mdy("1/1/1950")
-d5 <- mdy(mv5$date_of_valve_replacement_1) - mdy("1/1/1950")
-
-table(mv5$ndi_date_of_death[is.na(d1)])
-table(mv5$date_of_death[is.na(d2)])
-table(is.finite(d1), is.finite(d2))
-
-c3 <- as.numeric(d3-d0) / 365.25
-c4 <- as.numeric(d4-d0) / 365.25
-censor <- as.numeric(is.finite(c3))
-table(censor)
-c3[censor==0] <- c4[censor==0]
-mv_su <- Surv(time=round(c3, 4), event=censor)
-plot(survfit(mv_su~1))
-
-c5 <- as.numeric(d5-d0) / 365.25
-censor <- as.numeric(is.finite(c5))
-table(censor)
-c5[censor==0] <- c3[censor==0]
-mv_su1 <- Surv(time=round(c5, 4), event=censor)
-plot(survfit(mv_su1~1))
-
+mv5$d_birth <- calculate_days(mv5, birthdate)
+mv5$d_vr1   <- calculate_days(mv5, date_of_valve_replacement)
+mv5$d_vr2   <- calculate_days(mv5, date_of_valve_replacement_1)
+mv5$d_vr3   <- calculate_days(mv5, date_of_valve_replacement_2)
+mv5$d_dis1  <- calculate_days(mv5, discharge_date)
+mv5$d_dis2  <- calculate_days(mv5, discharge_date_1)
+mv5$d_dis3  <- calculate_days(mv5, discharge_date_2)
+mv5$d_tx    <- calculate_days(mv5, unos_tx_date)
+mv5$d_death <- calculate_days(mv5, date_of_death)
+mv5$d_cens  <- mdy("12/30/2014") - mdy("1/1/1950")
 ```
 
+```{r mortality-only}
+t1 <- av5$d_death-av5$d_birth
+t2 <- av5$d_cens -av5$d_birth
+t <- ifelse(is.finite(t1), t1, t2)
+cens <- as.numeric(is.finite(t1))
+av_mortality <- Surv(time=round(t/365.25, 4), event=cens)
+plot(survfit(av_mortality~1))
+
+t1 <- mv5$d_death-mv5$d_birth
+t2 <- mv5$d_cens -mv5$d_birth
+t <- ifelse(is.finite(t1), t1, t2)
+cens <- as.numeric(is.finite(t1))
+mv_mortality <- Surv(time=round(t/365.25, 4), event=cens)
+plot(survfit(mv_mortality~1))
+```
+
+```{r conpeting-risk-second-replacement}
+# Several cases to consider
+
+# Case #1, alive at the end of the study, no second replacement
+# Case #2, died without second replacement
+# Case #3, alive at the end of the study, second replacement procedure needed
+# Case #4, died after second replacement procedure
+
+table(is.na(d_death), is.na(d_vr2))
+
+```
 
 ```{r save-everything, echo=FALSE}
 save.image("clean_up.RData")

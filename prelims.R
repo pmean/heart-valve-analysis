@@ -134,24 +134,24 @@ examine_dates <- function(v) {
   v                                             %>%
     isolate_month                               %>%
     as.numeric                                  %>%
-    is_in(1:12)                                 %>%
+    is_in(0:12)                                 %>%
     not                                         %>%
     and(!special_cases)                         -> bad_month
   if (sum(bad_month)>0) {
     cat("\n")
-    cat("Bad month ")
+    cat("Bad month (ignoring 0 or 00 for now) ")
     print(table(v[bad_month]))
   }
   v                                             %>%
     isolate_day                                 %>%
     as.numeric                                  %>%
-    is_in(1:31)                                 %>%
+    is_in(0:31)                                 %>%
     not                                         %>%
     and(!special_cases)                         %>%
     and(!bad_month)                             -> bad_day
   if (sum(bad_day)>0) {
     cat("\n")
-    cat("Bad day ")
+    cat("Bad day (ignoring 00 for now) ")
     print(table(v[bad_day]))
   }
   v                                             %>%
