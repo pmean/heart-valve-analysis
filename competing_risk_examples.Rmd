@@ -77,3 +77,6 @@ legend(200, .5, c("Death w/o PCM", "ever PCM",
   lwd=2, bty='n', cex=.82)
 ```
 
+```{r save-everything}
+save.image("competing_risks_examples.RData")
+```
