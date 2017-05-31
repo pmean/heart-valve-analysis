@@ -6,7 +6,7 @@ output: html_document
 ---
 
 
-```{r preliminaries, echo=FALSE}
+```{r preliminaries}
 source("prelims.R", echo=FALSE)
 av1 <- read.csv("av1_2017_05_29.csv", as.is=TRUE)
 av3 <- read.csv("av3_2017_05_29.csv", as.is=TRUE)
@@ -30,12 +30,43 @@ av4 <- remove_empty_space(av4)
 mv1 <- remove_empty_space(mv1)
 mv4 <- remove_empty_space(mv4)
 
-loop_through_dates(av1)
-loop_through_dates(av3)
-loop_through_dates(av4)
+av1 <- check_ids(av1)
+av3 <- check_ids(av3)
+av4 <- check_ids(av4)
 
-loop_through_dates(mv1)
-loop_through_dates(mv4)
+mv1 <- check_ids(mv1)
+mv4 <- check_ids(mv4)
+
+{
+  cat("\n\n\n\n**** Note new codes: ")
+  cat("998 (was 888), ")
+  cat("997 (was blank), ")
+  cat("996 (was missing), ")
+  cat("995 (unfixable)")
+  cat("\n\n")
+}
+
+av1 <- loop_through_dates(av1)
+av3 <- loop_through_dates(av3)
+av4 <- loop_through_dates(av4)
+
+mv1 <- loop_through_dates(mv1)
+mv4 <- loop_through_dates(mv4)
+
+print(dim(av1)[1])
+print(dim(av3)[1])
+print(dim(av4)[1])
+
+print(length(intersect(av1$id, av3$id)))
+print(length(intersect(av1$id, av4$id)))
+print(length(intersect(av3$id, av4$id)))
+print(setdiff(av3$id, av1$id))
+
+print(dim(mv1)[1])
+print(dim(mv4)[1])
+
+print(length(intersect(mv1$id, mv4$id)))
+print(setdiff(mv4$id, mv1$id))
 ```
 
 AORTIC
@@ -88,178 +119,74 @@ AORTIC
 
 10.	Redo stuff – we may not have time for this before abstract deadline
 
-
-```{r peek}
-j1 <- which(grepl("^x",names(av1)))
-print(names(av1)[j1])
-j1 <- j1[-1]
-j3 <- which(grepl("^x",names(av3)))
-print(j3)
-j4 <- which(grepl("^x",names(av4)))
-print(names(av4)[j4])
-
-for (j in names(av1)[j1]) {
-  x <- av1[, j]
-  n <- length(x)
-  is_empty <- is.na(x) | grepl("^[[:space:]]+$", x)
-  if (sum(is_empty)==n) {next}
-  cat("\n\n")
-  cat(j)
-  cat("\n")
-  print(table(x[!is_empty]))
-}
-
-i1 <- which(is.na(av1$id))
-print(i1)
-i3 <- which(is.na(av3$id))
-print(i3)
-i4 <- which(is.na(av4$id))
-print(i4)
-
-for (j in names(av3)) {
-  x <- av3[i3, j]
-  n <- length(x)
-  is_empty <- is.na(x) | x=="" | grepl("^[[:space:]]+$", x)
-  if (sum(is_empty)==n) {next}
-  cat("\n\n")
-  cat(j)
-  cat(": ")
-  cat(i3[!is_empty])
-  print(table(x[!is_empty]))
-}
-
-av1 <- av1[, -j1]
-
-av3 <- av3[-i3, ]
-
-str(av1)
-head(av1)
-tail(av1)
-
-str(av3)
-head(av3)
-tail(av3)
-
-str(av4)
-head(av4)
-tail(av4)
-```
-
-```{r examine-dates}
-alist1 <- c(
-  "birthdate",
-  "first_admit_date",
-  "date_of_valve_replacement",
-  "discharge_date",
-  "date_of_valve_replacement_1",
-  "discharge_date_1",
-  "date_of_valve_replacement_2",
-  "discharge_date_2",
-  "unos_init_date",
-  "unos_end_date",
-  "unos_tx_date",
-  "unos_re_tx_date",
-  "pccc_tx_date",
-  "ndi_date_of_death")
-for (a in alist1) {
-  cat("\n\n")
-  cat(a)
-  examine_dates(av1[, a]) 
-}
-{
-  cat("\n\n")
-  cat("date_of_death")
-  examine_dates(av3$date_of_death)
-}
-{
-  cat("\n\n")
-  cat("date_of_death")
-  examine_dates(av4$date_of_death)
-}
-```
-
-```{r merge-everything}
-print(length(unique(av1$id)))
-print(dim(av1)[1])
-print(length(unique(av3$id)))
-print(dim(av3)[1])
-print(length(unique(av4$id)))
-print(dim(av4)[1])
-
-print(length(intersect(av1$id, av3$id)))
-print(length(intersect(av1$id, av4$id)))
-print(length(intersect(av3$id, av4$id)))
-print(setdiff(av3$id, av1$id))
-
-av1                                             %>%
-  select(id, ndi_date_of_death)                 %>%
-  inner_join(av3)                               %>%
-  mutate(n=(ndi_date_of_death!=date_of_death))  %>%
-  use_series(n)                                 %>%
-  sum
-av1                                             %>%
-  select(id, ndi_date_of_death)                 %>%
-  anti_join(av3)                                %>%
-  use_series(ndi_date_of_death)                 %>%
-  table
-```
-
-```{r fix_dates}
-fix_list1 <- "date_of_valve_replacement"
-for (d in fix_list1) {
-  v <- av1[, d]
-  double_delimiter <-  grepl("[-/].*[-/]", v)
-  single_delimiter <-  grepl("[-/]", v) & ! double_delimiter
-  absent_delimiter <- !grepl("[-/]", v)
-  year_only <- absent_delimiter & as.numeric(v) %in% as.character(1950:2020)
-  missing_code <- absent_delimiter & !year_only
-  double_00 <- grepl("00/00", v) | grepl("^0/00", v)
-  v <- sub("^0/00", "00/00", v)
-  single_00 <- grepl("/00/",  v) & !double_00 
-  cat("\n\nMissing code\n")
-  v[missing_code] %>% unique %>% sort %>% print
-  cat("\n\nYear only\n")
-  v[year_only]        %>% unique %>% sort %>% print
-  cat("\n\nSingle delimiter\n")
-  v[single_delimiter] %>% unique %>% sort %>% print
-  cat("\n\nDouble 00\n")
-  v[double_00]        %>% unique %>% sort %>% print
-  cat("\n\nSingle 00\n")
-  v[single_00]        %>% unique %>% sort %>% print
-  cat("\n\n")
-
-  w <- v
-  w[year_only] <- paste0("06/30/", v[year_only])
-  w[single_delimiter] <- sub("/", "/15/", v[single_delimiter])
-  w[single_00] <- sub("/00/", "/15/", v[single_00])
-  w[double_00] <- sub("^0/00", "06/30", v[double_00])
-  w[double_00] <- sub("00/00", "06/30", v[double_00])
-  print(data.frame(changes=paste(v, "changes to", w)[v!=w]))
-  av1$date_of_valve_replacement_recode <- w
-}
-```
-
 ```{r kaplan-meier}
-# Check for dates that will not convert.
-m_codes <- av1$date_of_valve_replacement_recode %in% c("888", "999", "999.00")
-sum(m_codes)
-av1 %>% filter(!m_codes) -> av1x
-dim(av1x)
-d0 <- mdy(av1x$date_of_valve_replacement_recode) - mdy("1/1/1950")
-d1 <- mdy(av1x$ndi_date_of_death)                - mdy("1/1/1950")
-d2 <- rep(mdy("12/30/2014")-mdy("1/1/1950"), dim(av1x)[1])
-sum(is.na(d0))
-sum(is.na(d1))
-c1 <- as.numeric(d1-d0) / 365.25
-c2 <- as.numeric(d2-d0) / 365.25
-censor <- as.numeric(is.finite(c1))
+av4                                             %>%
+  select(id, date_of_death)                     %>%
+  right_join(av1)                               -> av5
+dim(av1)
+dim(av5)
+valid_initial_date <- is.finite(mdy(av5$date_of_valve_replacement))
+av5 <- av5[valid_initial_date, ]
+dim(av5)
+
+d0 <- mdy(av5$date_of_valve_replacement)   - mdy("1/1/1950")
+d1 <- mdy(av5$ndi_date_of_death)           - mdy("1/1/1950")
+d2 <- mdy(av5$date_of_death)               - mdy("1/1/1950")
+d3 <- pmax(d1, d2, na.rm=TRUE)
+d4 <- mdy("12/30/2014")                    - mdy("1/1/1950")
+d5 <- mdy(av5$date_of_valve_replacement_1) - mdy("1/1/1950")
+
+table(av5$ndi_date_of_death[is.na(d1)])
+table(av5$date_of_death[is.na(d2)])
+table(is.finite(d1), is.finite(d2))
+
+c3 <- as.numeric(d3-d0) / 365.25
+c4 <- as.numeric(d4-d0) / 365.25
+censor <- as.numeric(is.finite(c3))
 table(censor)
-c1[censor==0] <- c2[censor==0]
-av_su <- Surv(time=round(c1, 4), event=censor)
+c3[censor==0] <- c4[censor==0]
+av_su <- Surv(time=round(c3, 4), event=censor)
 plot(survfit(av_su~1))
+
+c5 <- as.numeric(d5-d0) / 365.25
+censor <- as.numeric(is.finite(c5))
+table(censor)
+c5[censor==0] <- c3[censor==0]
+av_su1 <- Surv(time=round(c5, 4), event=censor)
+plot(survfit(av_su1~1))
+
+mv5 <- mv1
+valid_initial_date <- is.finite(mdy(mv5$date_of_valve_replacement))
+mv5 <- mv5[valid_initial_date, ]
+dim(mv5)
+
+d0 <- mdy(mv5$date_of_valve_replacement)   - mdy("1/1/1950")
+d3 <- mdy(mv5$ndi_date_of_death)           - mdy("1/1/1950")
+d4 <- mdy("12/30/2014")                    - mdy("1/1/1950")
+d5 <- mdy(mv5$date_of_valve_replacement_1) - mdy("1/1/1950")
+
+table(mv5$ndi_date_of_death[is.na(d1)])
+table(mv5$date_of_death[is.na(d2)])
+table(is.finite(d1), is.finite(d2))
+
+c3 <- as.numeric(d3-d0) / 365.25
+c4 <- as.numeric(d4-d0) / 365.25
+censor <- as.numeric(is.finite(c3))
+table(censor)
+c3[censor==0] <- c4[censor==0]
+mv_su <- Surv(time=round(c3, 4), event=censor)
+plot(survfit(mv_su~1))
+
+c5 <- as.numeric(d5-d0) / 365.25
+censor <- as.numeric(is.finite(c5))
+table(censor)
+c5[censor==0] <- c3[censor==0]
+mv_su1 <- Surv(time=round(c5, 4), event=censor)
+plot(survfit(mv_su1~1))
+
 ```
 
 
 ```{r save-everything, echo=FALSE}
-save.image("av.RData")
+save.image("clean_up.RData")
 ```

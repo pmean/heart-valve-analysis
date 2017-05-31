@@ -21,15 +21,6 @@ clean_up_names <- function(x) {
 empty <- function(x) {
   is.na(x) | x=="" | grepl("^[[:space:]]*$", x)
 }
-empty("  ")
-empty(NA)
-empty("")
-empty("  x")
-
-filled <- function(x) {
-  !is.na(x) & x!="" & !grepl("^[[:space:]]*$", x)
-}
-
 
 identify_empty_columns <- function(df) {
   df %>% empty %>% as.matrix %>% apply(2, all)
@@ -85,7 +76,9 @@ isolate_year <- function(v) {
 }
 fix_dates <- function(v) {
   old_v <- v
-  v <- ifelse(v=="", 777, v)
+  v <- ifelse(v=="888", "998", v)
+  v <- ifelse(v=="",    "997", v)
+  v <- ifelse(is.na(v), "996", v)
   v                                             %>%
     sub("//", "/", .)                           %>%
     sub("999.00", "999", .)                     %>%
@@ -94,15 +87,31 @@ fix_dates <- function(v) {
     sub("/00/", "/15/", .)                      %>%
     sub("6/695",  "06/06/1995", .)              %>%
     sub("812/06", "08/12/2006", .)              %>%
-    sub("6/6/1902", "888", .)                   %>%
+    sub("1/116/07", "11/16/2007", .)            %>%
+    sub("3/30/21998", "3/30/1998", .)           %>%
+    sub("6/6/1902", "998", .)                   %>%
     sub("9/25/1902", "999", .)                  -> v
+
+  two_digit <- c(paste0("/0", 0:9, "$"), paste0("/", 10:99, "$"))
+  four_digit <- c(paste0("/200", 0:9), paste0("/20", 10:17), paste0("/19", 18:99))
+  for (i in 1:100) {
+    v <- sub(two_digit[i], four_digit[i], v)
+  }
+  
+  two_slashes <- grepl("/", sub("/", "", v))
+  two_dashes  <- grepl("-", sub("-", "", v))
+  unfixable <- !(two_slashes | two_dashes | v %in% as.character(996:999))
+  v[unfixable] <- "995"
+
   update_flag <- v!=old_v
   old_v                                         %>%
     paste("changed to")                         %>%
     paste(v)                                    %>%
     tibble                                      %>%
+    set_names("x")                              %>%
     filter(update_flag)                         %>%
     distinct                                    %>%
+    arrange(x)                                  %>%
     unlist                                      %>%
     cat(sep="\n")
   return(v)
@@ -118,6 +127,9 @@ examine_dates <- function(v) {
       table(useNA="ifany")                      %>%
       addmargins                                %>%
       print
+  }
+  if (sum(special_cases)==0) {
+    cat("\nNo special cases!\n\n")
   }
   v                                             %>%
     isolate_month                               %>%
@@ -139,7 +151,7 @@ examine_dates <- function(v) {
     and(!bad_month)                             -> bad_day
   if (sum(bad_day)>0) {
     cat("\n")
-    cat("Bad month ")
+    cat("Bad day ")
     print(table(v[bad_day]))
   }
   v                                             %>%
@@ -162,7 +174,7 @@ loop_through_dates <- function(df) {
   dfname <- deparse(substitute(df))
   names(df) %>% grep("date", ., value=TRUE) -> date_names
   for (d in date_names) {
-    cat("\n\n**** ")
+    cat("\n\n\n\n**** ")
     cat(paste(dfname, d))
     examine_dates(df[, d])
     df[, d] <- fix_dates(df[, d])
@@ -170,4 +182,26 @@ loop_through_dates <- function(df) {
     cat(paste(dfname, d))
     examine_dates(df[, d])
   }
+  return(df)
+}
+
+check_ids <- function(df) {
+  dfname <- deparse(substitute(df))
+  i1 <- is.na(df$id)
+  if (sum(i1) > 0) {
+    cat("\n\nMissing id in ")
+    cat(dfname)
+    cat("\n")
+    print(df[i1 ,])
+    df <- df[!i1, ]
+  }
+  df$id %>% duplicated %>% which -> i2
+  i3 <- which(df$id %in% df$id[i2])
+  if (sum(i2)>0) {
+    cat("\n\nDuplicate ids in ")
+    cat(dfname)
+    cat("\n")
+    print(df[i3, ])
+  }
+  return(df)
 }

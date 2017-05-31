@@ -1,0 +1,79 @@
+---
+title: "Simple competing risk examples"
+author: "Steve Simon"
+date: "May 31, 2017"
+output: html_document
+---
+
+These examples are from: Multi-state models and competing risks. Terry Therneau, Cynthia Crowson, Elizabeth Atkinson. April 4, 2017
+
+```{r cr1}
+library(survival)
+par(mfrow=c(1,2))
+hist(mgus2$age, nclass=30, main='', xlab="Age")
+with(mgus2, tapply(age, sex, mean))
+mfit1 <- survfit(Surv(futime, death) ~ sex, data=mgus2)
+mfit1
+plot(mfit1, col=c(1,2), xscale=12, mark.time=FALSE, lwd=2,
+xlab="Years post diagnosis", ylab="Survival")
+legend("topright", c("female", "male"), col=1:2, lwd=2, bty='n')
+```
+
+```{r cr2}
+etime <- with(mgus2, ifelse(pstat==0, futime, ptime))
+event <- with(mgus2, ifelse(pstat==0, 2*death, 1))
+event <- factor(event, 0:2, labels=c("censor", "pcm", "death"))
+table(event)
+mfit2 <- survfit(Surv(etime, event) ~ sex, data=mgus2)
+print(mfit2, rmean=240, scale=12)
+mfit2$transitions
+plot(mfit2, col=c(1,2,1,2), lty=c(2,2,1,1),
+  mark.time=FALSE, lwd=2, xscale=12,
+  xlab="Years post diagnosis", ylab="Probability in State")
+legend(240, .6, c("death:female", "death:male", "pcm:female", "pcm:male"),
+  col=c(1,2,1,2), lty=c(1,1,2,2), lwd=2, bty='n')
+```
+
+```{r cr3}
+pcmbad <- survfit(Surv(etime, pstat) ~ sex, data=mgus2)
+plot(pcmbad[2], mark.time=FALSE, lwd=2, fun="event", conf.int=FALSE, xscale=12,
+  xlab="Years post diagnosis", ylab="Fraction with PCM")
+lines(mfit2[2,1], lty=2, lwd=2, mark.time=FALSE, conf.int=FALSE)
+legend(0, .25, c("Males, PCM, incorrect curve", "Males, PCM, competing risk"),
+  col=1, lwd=2, lty=c(1,2), bty='n')
+```
+
+```{r cr4}
+ptemp <- with(mgus2, ifelse(ptime==futime & pstat==1, ptime-.1, ptime))
+newdata <- tmerge(mgus2, mgus2, id=id, death=event(futime, death),
+  pcm = event(ptemp, pstat))
+newdata <- tmerge(newdata, newdata, id, enum=cumtdc(tstart))
+with(newdata, table(death, pcm))
+
+temp <- with(newdata, ifelse(death==1, 2, pcm))
+newdata$event <- factor(temp, 0:2, labels=c("censor", "pcm", "death"))
+mfit3 <- survfit(Surv(tstart, tstop, event) ~ sex, data=newdata, id=id)
+print(mfit3, rmean=240, digits=2)
+mfit3$transitions
+plot(mfit3[,1], mark.time=FALSE, col=1:2, lty=1:2, lwd=2,
+  xscale=12, xlab="Years post MGUS diagnosis", ylab="Fraction in the PCM state")
+legend(48, .04, c("female", "male"), lty=1:2, col=1:2, lwd=2, bty='n')
+```
+
+```{r cr5}
+# Death after PCM will correspond to data rows with
+# enum = 2 and event = death
+d2 <- with(newdata, ifelse(enum==2 & event=='death', 4, as.numeric(event)))
+e2 <- factor(d2, labels=c("censor", "pcm", "death w/o pcm",
+  "death after pcm"))
+mfit4 <- survfit(Surv(tstart, tstop, e2) ~ sex, data=newdata, id=id)
+plot(mfit2[2,], lty=c(1,2),
+  xscale=12, mark.time=FALSE, lwd=2,
+  xlab="Years post diagnosis", ylab="Probability in State")
+lines(mfit4[2,3], mark.time=FALSE, col=2, lty=1, lwd=2,
+  conf.int=FALSE)
+legend(200, .5, c("Death w/o PCM", "ever PCM",
+  "Death after PCM"), col=c(1,1,2), lty=c(2,1,1),
+  lwd=2, bty='n', cex=.82)
+```
+
